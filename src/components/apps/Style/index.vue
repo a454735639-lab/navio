@@ -17,6 +17,7 @@ import { t } from '@/locales'
 import { apiRespErrMsg } from '@/utils/cmn/apiMessage'
 import { FileType, PanelPanelConfigStyleEnum } from '@/enums'
 import { STip } from '@/components/common'
+import NetworkProbe from './NetworkProbe.vue'
 
 const authStore = useAuthStore()
 const panelState = usePanelState()
@@ -493,6 +494,8 @@ function handleNetModeChangeAutoMaxPingMsChange(value: number) {
         clearable
       />
     </NCard>
+
+    <NetworkProbe />
 
     <NCard style="border-radius:10px" class="mt-[10px]" size="small">
       <NButton size="small" quaternary type="error" @click="resetPanelConfig">

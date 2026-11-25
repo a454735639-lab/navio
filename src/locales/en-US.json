@@ -44,6 +44,25 @@
     "title": "System Applications"
   },
   "apps": {
+    "networkProbe": {
+      "title": "Network location probe",
+      "tip": "Detects LAN / Tailscale / WAN even on an https page. Disabled by default; nothing changes unless configured.",
+      "enable": "Enable",
+      "port": "Port",
+      "provider": "Certificate source",
+      "certPath": "Cert path",
+      "keyPath": "Key path",
+      "acmeEmail": "ACME email",
+      "acmeDomains": "Probe domains",
+      "dnsProvider": "DNS provider",
+      "dnsToken": "DNS token",
+      "tokenSaved": "Saved; leave empty to keep",
+      "staging": "Use staging",
+      "testCert": "Test certificate",
+      "testProbe": "Test probes",
+      "certExpire": "Cert expires",
+      "unreachable": "unreachable"
+    },
     "about": {
       "QR": "QR Code(recommend)",
       "alreadyLatestVersion": "Already the latest version",

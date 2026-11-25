@@ -44,6 +44,25 @@
     "title": "系统应用"
   },
   "apps": {
+    "networkProbe": {
+      "title": "网络位置探针",
+      "tip": "用于在 https 页面判断当前是内网、Tailscale 还是外网。默认关闭，不配置不影响使用。",
+      "enable": "启用",
+      "port": "端口",
+      "provider": "证书来源",
+      "certPath": "证书路径",
+      "keyPath": "私钥路径",
+      "acmeEmail": "ACME 邮箱",
+      "acmeDomains": "探针域名",
+      "dnsProvider": "DNS 提供商",
+      "dnsToken": "DNS Token",
+      "tokenSaved": "已保存，留空表示不修改",
+      "staging": "使用 staging 环境",
+      "testCert": "测试证书",
+      "testProbe": "测试探针",
+      "certExpire": "证书到期",
+      "unreachable": "不可达"
+    },
     "about": {
       "QR": "二维码(推荐)",
       "alreadyLatestVersion": "已经是最新版本",
