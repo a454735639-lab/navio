@@ -144,6 +144,13 @@ func (p *acmeProvider) issue(certFile, keyFile string) error {
 }
 
 func encodePrivateKey(key any) ([]byte, error) {
+	// lego 在部分版本里直接返回 PEM 字节
+	if b, ok := key.([]byte); ok {
+		if block, _ := pem.Decode(b); block != nil {
+			return b, nil
+		}
+		return nil, fmt.Errorf("invalid private key bytes")
+	}
 	switch k := key.(type) {
 	case *rsa.PrivateKey:
 		return pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(k)}), nil
