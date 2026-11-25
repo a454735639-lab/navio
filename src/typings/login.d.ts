@@ -4,6 +4,7 @@ declare namespace Login{
         username:string 
         password:string
         vcode?:string
+        rememberMe?:boolean
     }
 
 	interface LoginResponse extends User.Info{

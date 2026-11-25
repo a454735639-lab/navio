@@ -19,9 +19,9 @@ let lastProbe: { origin: string, ok: boolean, ms: number | null, at: number } | 
 export function getNetworkStatus() {
   const entry = window.location.hostname
   if (roleProbeCache.lan?.ok && Date.now() - roleProbeCache.lan.at < ROLE_PROBE_TTL)
-    return { mode: 'lan', ms: null, at: roleProbeCache.lan.at }
+    return { mode: 'lan', ms: roleProbeCache.lan.ms, at: roleProbeCache.lan.at }
   if (roleProbeCache.ts?.ok && Date.now() - roleProbeCache.ts.at < ROLE_PROBE_TTL)
-    return { mode: 'tailnet', ms: null, at: roleProbeCache.ts.at }
+    return { mode: 'tailnet', ms: roleProbeCache.ts.ms, at: roleProbeCache.ts.at }
   const mode = isTailnetHost(entry)
     ? 'tailnet'
     : (panelState.networkMode === PanelStateNetworkModeEnum.lan ? 'lan' : 'wan')
@@ -137,18 +137,19 @@ export function clearNetworkCache() {
  * - 结果缓存 60s，避免每次点击卡片都探测
  */
 /** https 探针（lan-probe / ts-probe）：镜像返回 204，用来判断当前网络位置 */
-const roleProbeCache: Record<string, { ok: boolean, at: number }> = {}
+const roleProbeCache: Record<string, { ok: boolean, ms: number, at: number }> = {}
 const ROLE_PROBE_TTL = 60_000
 
-async function probeHttps(url: string, timeout = 800): Promise<boolean> {
+async function probeHttps(url: string, timeout = 800): Promise<number> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeout)
+  const started = performance.now()
   try {
     await fetch(url, { method: 'GET', mode: 'no-cors', cache: 'no-store', signal: controller.signal })
-    return true
+    return Math.round(performance.now() - started)
   }
   catch {
-    return false
+    return -1
   }
   finally {
     clearTimeout(timer)
@@ -161,8 +162,9 @@ export async function probeRole(role: 'lan' | 'ts', url: string | undefined, for
   const cached = roleProbeCache[role]
   if (!force && cached && Date.now() - cached.at < ROLE_PROBE_TTL)
     return cached.ok
-  const ok = await probeHttps(url)
-  roleProbeCache[role] = { ok, at: Date.now() }
+  const ms = await probeHttps(url)
+  const ok = ms >= 0
+  roleProbeCache[role] = { ok, ms, at: Date.now() }
   return ok
 }
 

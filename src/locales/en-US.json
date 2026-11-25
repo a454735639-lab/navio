@@ -488,7 +488,12 @@
     "loginButton": "Login",
     "passwordPlaceholder": "Password",
     "usernamePlaceholder": "Username",
-    "welcomeMessage": "Welcome back!"
+    "welcomeMessage": "Welcome back!",
+    "brandSubtitle": "Self-hosted home navigation panel",
+    "rememberAccount": "Remember account",
+    "loginBtn": "Sign in",
+    "visitPublic": "Public mode",
+    "captchaPlaceholder": "Enter captcha"
   },
   "panelHome": {
     "changeToLanModel": "Switch Sun-Panel to the internal network environment",

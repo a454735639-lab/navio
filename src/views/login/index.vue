@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NCard, NForm, NFormItem, NInput, NSelect, NSwitch, useMessage, useOsTheme } from 'naive-ui'
+import { NButton, NCard, NCheckbox, NForm, NFormItem, NInput, NSelect, NSwitch, useMessage, useOsTheme } from 'naive-ui'
 import type { InputInst } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
@@ -15,7 +15,6 @@ import { apiRespErrMsg, setTitle } from '@/utils/cmn'
 import { defaultSetting } from '@/store/modules/app/helper'
 
 const route = useRoute()
-// const userStore = useUserStore()
 const authStore = useAuthStore()
 const appStore = useAppStore()
 const panelState = usePanelState()
@@ -25,6 +24,7 @@ const ms = useMessage()
 const loading = ref(false)
 const defaultUsername = ref<string>(route.query.username as string || '')
 const inputpasswordRef = ref<InputInst | null>(null)
+const showPassword = ref(false)
 const isDark = computed(() => {
   if (appStore.theme === 'auto')
     return osTheme.value === 'dark'
@@ -38,7 +38,27 @@ const captchaRef = ref()
 const form = ref<Login.LoginReqest>({
   username: defaultUsername.value,
   password: '',
+  rememberMe: false,
 })
+
+// 记住账号：勾选时把用户名存 localStorage，下次自动带出
+const REMEMBER_KEY = 'navio_remember_username'
+const savedUsername = localStorage.getItem(REMEMBER_KEY)
+if (savedUsername && !defaultUsername.value) {
+  form.value.username = savedUsername
+  form.value.rememberMe = true
+}
+
+function handleRememberChange(checked: boolean) {
+  form.value.rememberMe = checked
+  if (checked) {
+    if (form.value.username)
+      localStorage.setItem(REMEMBER_KEY, form.value.username)
+  }
+  else {
+    localStorage.removeItem(REMEMBER_KEY)
+  }
+}
 
 const loginPost = async () => {
   loading.value = true
@@ -47,9 +67,8 @@ const loginPost = async () => {
     if (res.code === 0) {
       authStore.setToken(res.data.token)
       authStore.setUserInfo(res.data)
-      panelState.reset() // 重置面板配置
+      panelState.reset()
 
-      // 添加到账号管理器
       accountManagerStore.addAccount({
         username: res.data.username || form.value.username,
         name: res.data.name || '',
@@ -78,11 +97,9 @@ const loginPost = async () => {
 }
 
 function handleEnterDown(e: any) {
-  // 修复Mac safari浏览器中文输入法回车触发
   if (e.keyCode === 229)
     return
   if (e.key === 'Enter' && !e.isComposing) {
-    // 点击登录按钮触发
     loginPost()
   }
 }
@@ -123,7 +140,6 @@ onMounted(() => {
     inputpasswordRef.value?.focus()
   }
 
-  // 如果已经登录并且不是在添加账号登录页面，跳转到首页
   if (route.query.type !== 'addLogin' && (authStore.token !== null && authStore.token !== '')) {
     router.push({ path: '/' })
   }
@@ -131,45 +147,51 @@ onMounted(() => {
 </script>
 
 <template>
-  <div>
+  <div class="login-page">
     <div class="background" :style="{ backgroundImage: `url('${appStore.siteSetting.loginBackgroundUrl}')` }" />
+
+    <!-- 顶部工具条：主题 + 语言，不再占用卡片内部空间 -->
+    <div class="toolbar">
+      <div class="toolbar-item">
+        <NSwitch v-model:value="isDark" @update:value="handleTheme">
+          <template #checked-icon>
+            <SvgIcon icon="mingcute:moon-fog-line" />
+          </template>
+          <SvgIcon icon="tabler-sun-filled" />
+          <template #unchecked-icon>
+            <SvgIcon icon="mingcute:sun-fog-line" />
+          </template>
+        </NSwitch>
+      </div>
+      <div class="toolbar-item flex items-center gap-2">
+        <SvgIcon icon="flowbite-language-outline" class="language-text-style" />
+        <NSelect
+          v-model:value="languageValue" size="small" :options="languageOptions"
+          class="!w-[100px]" @update:value="handleChangeLanuage"
+        />
+      </div>
+    </div>
+
     <div class="login-container">
-      <NCard class="login-card" style="border-radius: 20px;">
-        <div class="mb-5 flex items-center justify-end">
-          <div class="w-full">
-            <NSwitch v-model:value="isDark" @update:value="handleTheme">
-              <template #checked-icon>
-                <SvgIcon icon="mingcute:moon-fog-line" />
-              </template>
-              <SvgIcon icon="tabler-sun-filled" />
-              <template #unchecked-icon>
-                <SvgIcon icon="mingcute:sun-fog-line" />
-              </template>
-            </NSwitch>
+      <NCard class="login-card" style="border-radius: 24px">
+        <!-- 品牌区 -->
+        <div class="brand">
+          <div class="brand-icon">
+            <SvgIcon icon="mdi:compass-outline" />
           </div>
-          <div class="mr-1">
-            <SvgIcon
-              icon="flowbite-language-outline"
-              style="width: 22px;height: 22px;"
-              class="language-text-style"
-            />
-          </div>
-          <div class="min-w-[100px]">
-            <NSelect
-              v-model:value="languageValue" size="small" :options="languageOptions"
-              @update-value="handleChangeLanuage"
-            />
+          <div class="brand-text">
+            <div class="brand-name">{{ t('common.appName') }}</div>
+            <div class="brand-sub">{{ t('login.brandSubtitle') }}</div>
           </div>
         </div>
 
-        <div class="login-title">
-          <!-- <NGradientText :size="30" type="success" class="!font-bold"> -->
-          {{ appStore.siteSetting.title }}
-          <!-- </NGradientText> -->
-        </div>
-        <NForm :model="form" label-width="100px" @keydown.enter="handleEnterDown">
+        <div class="login-title">{{ appStore.siteSetting.title }}</div>
+
+        <NForm :model="form" @keydown.enter="handleEnterDown">
           <NFormItem>
-            <NInput v-model:value="form.username" :placeholder="$t('login.usernamePlaceholder')">
+            <NInput
+              v-model:value="form.username" size="large" :placeholder="$t('login.usernamePlaceholder')" clearable
+            >
               <template #prefix>
                 <SvgIcon icon="ph:user-bold" />
               </template>
@@ -177,32 +199,50 @@ onMounted(() => {
           </NFormItem>
 
           <NFormItem>
-            <NInput ref="inputpasswordRef" v-model:value="form.password" type="password" :placeholder="$t('login.passwordPlaceholder')">
+            <NInput
+              ref="inputpasswordRef" v-model:value="form.password" :type="showPassword ? 'text' : 'password'"
+              :placeholder="$t('login.passwordPlaceholder')"
+            >
               <template #prefix>
                 <SvgIcon icon="mdi:password-outline" />
+              </template>
+              <template #suffix>
+                <SvgIcon
+                  :icon="showPassword ? 'mdi:eye-outline' : 'mdi:eye-off-outline'" class="cursor-pointer"
+                  @click="showPassword = !showPassword"
+                />
               </template>
             </NInput>
           </NFormItem>
 
           <NFormItem v-if="appStore.siteSetting.isEnableLoginCaptcha">
-            <div class="w-[130px] h-[40px] mr-[20px] rounded border flex cursor-pointer">
-              <Captcha ref="captchaRef" src="/api/captcha/getImage" />
+            <div class="captcha-row">
+              <div class="captcha-box">
+                <Captcha ref="captchaRef" src="/api/captcha/getImage" />
+              </div>
+              <NInput
+                v-model:value="form.vcode" size="large" :placeholder="$t('login.captchaPlaceholder')"
+                class="captcha-input"
+              >
+                <template #prefix>
+                  <SvgIcon icon="mdi:shield-lock-outline" />
+                </template>
+              </NInput>
             </div>
-            <NInput v-model:value="form.vcode" size="large" type="text" clearable :placeholder="t('login.captchaCodePlaceholder')" />
           </NFormItem>
 
-          <NFormItem style="margin-top: 10px">
-            <NButton :loading="loading" class="login-button" @click="loginPost">
-              {{ $t('login.loginButton') }}
-            </NButton>
+          <NFormItem :show-feedback="false">
+            <NCheckbox v-if="route.query.type !== 'addLogin'" :checked="form.rememberMe" size="small" @update:checked="handleRememberChange">
+              {{ $t('login.rememberAccount') }}
+            </NCheckbox>
           </NFormItem>
 
-          <div class="copyright flex justify-center text-current">
-            Powered By <a
-              href="https://github.com/hslr-s/sun-panel" target="_blank"
-              class="ml-[5px]"
-            >Sun-Panel</a>
-          </div>
+          <NButton
+            type="primary" size="large" block :loading="loading" class="login-submit"
+            @click="loginPost"
+          >
+            {{ $t('login.loginBtn') }}
+          </NButton>
         </NForm>
       </NCard>
     </div>
@@ -210,67 +250,117 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.background {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background-size: cover;
-  background-position: center;
-  background-color: #f2f6ff;
+.login-page {
+  min-height: 100vh;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.dark .background {
-  filter: brightness(80%);
-  background-color: #18181b;
+.background {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(12px) brightness(0.7);
+}
+
+.toolbar {
+  position: absolute;
+  top: 24px;
+  right: 28px;
+  display: flex;
+  gap: 18px;
+  z-index: 2;
+}
+
+.toolbar-item {
+  display: flex;
+  align-items: center;
+}
+
+.language-text-style {
+  width: 22px;
+  height: 22px;
+  color: #fff;
+  opacity: 0.85;
 }
 
 .login-container {
-  padding: 20px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
-
-.login-title {
-  font-size: 30px;
-  font-weight: 900;
-  text-align: center;
-  margin: 20px;
-}
-
-@media (min-width: 600px) {
-  .login-card {
-    width: auto;
-    margin: 0px 10px;
-  }
-}
-
-.login-button {
-  width: 100%;
-  color: var(--n-text-color);
-  background-color: white;
-  font-weight: 900 !important;
-}
-
-.dark .login-button {
-  background-color: transparent;
+  position: relative;
+  z-index: 1;
+  width: min(400px, 92vw);
+  padding: 8px;
 }
 
 .login-card {
-  margin: 20px;
-  min-width: 400px;
-  background-color: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(10px);
+  padding: 34px 30px 28px !important;
 }
 
-.dark .login-card {
-  filter: brightness(90%);
-  background-color: rgba(72, 72, 72, 0.4);
-  backdrop-filter: blur(10px);
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 22px;
 }
 
-.language-text-style{
- color: var(--n-text-color);
+.brand-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  color: #fff;
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.35);
+  flex-shrink: 0;
+}
+
+.brand-name {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.brand-sub {
+  font-size: 12px;
+  opacity: 0.6;
+  margin-top: 2px;
+}
+
+.login-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 22px;
+  text-align: center;
+}
+
+.captcha-row {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  align-items: center;
+}
+
+.captcha-box {
+  width: 124px;
+  height: 40px;
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.captcha-input {
+  flex: 1;
+}
+
+.login-submit {
+  margin-top: 6px;
+  font-weight: 600;
 }
 </style>
