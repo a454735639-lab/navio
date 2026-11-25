@@ -10,4 +10,5 @@ type ApiPanel struct {
 	GalleryApi       GalleryApi
 	PublicGalleryApi PublicGalleryApi
 	BackupApi        BackupApi
+	NetworkApi       NetworkApi
 }

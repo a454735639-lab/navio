@@ -12,4 +12,5 @@ func Init(routerGroup *gin.RouterGroup) {
 	InitGallery(routerGroup)
 	InitPublicGallery(routerGroup)
 	InitBackupRouter(routerGroup)
+	InitNetwork(routerGroup)
 }

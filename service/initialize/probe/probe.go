@@ -1,11 +1,11 @@
 package probe
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"net/http"
 	"os"
-	"strings"
 	"sync"
 	"time"
 
@@ -19,6 +19,16 @@ type certReloader struct {
 	mu       sync.RWMutex
 	cert     *tls.Certificate
 	modTime  time.Time
+}
+
+func (c *certReloader) setPaths(certFile, keyFile string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.certFile != certFile || c.keyFile != keyFile {
+		c.certFile = certFile
+		c.keyFile = keyFile
+		c.cert = nil // 强制下次握手重新加载
+	}
 }
 
 func (c *certReloader) getCertificate(_ *tls.ClientHelloInfo) (*tls.Certificate, error) {
@@ -56,38 +66,76 @@ func handler() http.Handler {
 	return mux
 }
 
-// Start 启动可选的 TLS 探针服务（默认关闭）。
-// 配置：[probe] enabled / port / cert_path / key_path
+// Start 启动探针（读取数据库配置）
 func Start() {
-	enabled := strings.EqualFold(strings.TrimSpace(global.Config.GetValueStringOrDefault("probe", "enabled")), "true")
-	if !enabled {
+	Apply(LoadConfig())
+}
+
+var state = struct {
+	mu       sync.Mutex
+	srv      *http.Server
+	reloader *certReloader
+	port     int
+}{}
+
+// Apply 热应用配置：端口/开关变化时重建监听；仅证书路径变化时更新文件路径（mtime 热加载）。
+func Apply(cfg Config) {
+	state.mu.Lock()
+	defer state.mu.Unlock()
+
+	shutdown := func() {
+		if state.srv != nil {
+			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			_ = state.srv.Shutdown(ctx)
+			cancel()
+			state.srv = nil
+			state.port = 0
+			global.Logger.Infoln("[probe] stopped")
+		}
+	}
+
+	if !cfg.Enabled {
+		shutdown()
 		return
 	}
 
-	port := global.Config.GetValueIntOrDefault("probe", "port", 8443)
-	certPath := strings.TrimSpace(global.Config.GetValueString("probe", "cert_path"))
-	keyPath := strings.TrimSpace(global.Config.GetValueString("probe", "key_path"))
-	if certPath == "" || keyPath == "" {
-		global.Logger.Warnln("[probe] cert_path/key_path 未配置，探针服务未启动")
+	provider, err := NewProvider(cfg)
+	if err != nil {
+		global.Logger.Warnf("[probe] provider init failed: %v", err)
+		return
+	}
+	certFile, keyFile, err := provider.Ensure()
+	if err != nil {
+		global.Logger.Warnf("[probe] certificate unavailable: %v", err)
 		return
 	}
 
-	reloader := &certReloader{certFile: certPath, keyFile: keyPath}
+	// 端口未变且已在运行：只更新证书路径，不重启监听
+	if state.srv != nil && state.port == cfg.Port && state.reloader != nil {
+		state.reloader.setPaths(certFile, keyFile)
+		return
+	}
+
+	shutdown()
+
+	reloader := &certReloader{certFile: certFile, keyFile: keyFile}
 	srv := &http.Server{
-		Addr:              fmt.Sprintf(":%d", port),
+		Addr:              fmt.Sprintf(":%d", cfg.Port),
 		Handler:           handler(),
 		ReadHeaderTimeout: 5 * time.Second,
 		TLSConfig:         &tls.Config{GetCertificate: reloader.getCertificate, MinVersion: tls.VersionTLS12},
 	}
+	state.srv = srv
+	state.reloader = reloader
+	state.port = cfg.Port
 
 	go func() {
-		// 探针异常不能影响主面板
 		defer func() {
 			if r := recover(); r != nil {
 				global.Logger.Errorf("[probe] panic: %v", r)
 			}
 		}()
-		global.Logger.Infof("[probe] listening on :%d", port)
+		global.Logger.Infof("[probe] listening on :%d (provider=%s)", cfg.Port, provider.Name())
 		if err := srv.ListenAndServeTLS("", ""); err != nil && err != http.ErrServerClosed {
 			global.Logger.Errorf("[probe] server stopped: %v", err)
 		}
