@@ -1,3 +1,7 @@
+# Network probe
+
+详见 [docs/NETWORK-PROBE.md](docs/NETWORK-PROBE.md)。
+
 # Sun-Panel OSS 完整版（基于 v1-1 · local edition）
 
 基线：`sun-panel-oss-b-free-v1-1.zip`（B 方案修订版：PRO 遮罩移除、三处后端校验拆掉、启动不再心跳）
