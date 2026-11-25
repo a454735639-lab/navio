@@ -18,6 +18,7 @@ import (
 	"sun-panel/initialize/systemSettingCache"
 	"sun-panel/initialize/userToken"
 	"sun-panel/lib/cmn"
+	"sun-panel/lib/password"
 	"sun-panel/models"
 	"sun-panel/structs"
 	"time"
@@ -214,7 +215,7 @@ func CommandRun(arg CMDParams) {
 		newPassword := "12345678"
 
 		updateInfo := models.User{
-			Password: cmn.PasswordEncryption(newPassword),
+			Password: func() string { h, _ := password.Hash(newPassword); return h }(),
 			Token:    "",
 		}
 		// 重置第一个管理员的密码

@@ -6,6 +6,7 @@ import (
 	"sun-panel/api/api_v1/common/base"
 	"sun-panel/global"
 	"sun-panel/lib/cmn"
+	"sun-panel/lib/password"
 	"sun-panel/models"
 
 	"github.com/gin-gonic/gin"
@@ -95,14 +96,15 @@ func (a *UserApi) UpdatePasssword(c *gin.Context) {
 		apiReturn.ErrorParamFomat(c, err.Error())
 		return
 	} else {
-		if v.Password != cmn.PasswordEncryption(params.OldPassword) {
+		ok, _ := password.Verify(v.Password, params.OldPassword)
+		if !ok {
 			// 旧密码不正确
 			apiReturn.ErrorByCode(c, 1007)
 			return
 		}
 	}
 	res := global.Db.Model(&models.User{}).Where("id", userInfo.ID).Updates(map[string]interface{}{
-		"password": cmn.PasswordEncryption(params.NewPassword),
+		"password": func() string { h, _ := password.Hash(params.NewPassword); return h }(),
 		"token":    "",
 	})
 	if res.Error != nil {

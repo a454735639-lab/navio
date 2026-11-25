@@ -10,6 +10,7 @@ import (
 	"sun-panel/biz"
 	"sun-panel/global"
 	"sun-panel/lib/cmn"
+	"sun-panel/lib/password"
 	"sun-panel/models"
 
 	"github.com/gin-gonic/gin"
@@ -64,18 +65,27 @@ func (l LoginApi) Login(c *gin.Context) {
 	)
 	bToken := ""
 	param.Username = strings.TrimSpace(param.Username)
-	if info, err = mUser.GetUserInfoByUsernameAndPassword(param.Username, cmn.PasswordEncryption(param.Password)); err != nil {
-		// 未找到记录 账号或密码错误
+	if info, err = mUser.GetUserInfoByUsername(param.Username); err != nil {
 		if err == gorm.ErrRecordNotFound {
 			middleware.RecordLoginFailure(c.ClientIP())
 			apiReturn.ErrorByCode(c, 1003)
 			return
-		} else {
-			// 未知错误
-			apiReturn.Error(c, err.Error())
-			return
 		}
+		apiReturn.Error(c, err.Error())
+		return
+	}
 
+	ok, needUpgrade := password.Verify(info.Password, param.Password)
+	if !ok {
+		middleware.RecordLoginFailure(c.ClientIP())
+		apiReturn.ErrorByCode(c, 1003)
+		return
+	}
+	if needUpgrade {
+		if newHash, err := password.Hash(param.Password); err == nil {
+			_ = mUser.UpdateUserInfoByUserId(info.ID, map[string]interface{}{"password": newHash})
+			info.Password = newHash
+		}
 	}
 
 	// 停用或未激活

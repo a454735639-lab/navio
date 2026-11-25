@@ -7,7 +7,7 @@ import (
 	"sun-panel/api/api_v1/common/apiReturn"
 	"sun-panel/api/api_v1/common/base"
 	"sun-panel/global"
-	"sun-panel/lib/cmn"
+	"sun-panel/lib/password"
 	"sun-panel/lib/cmn/systemSetting"
 	"sun-panel/models"
 
@@ -44,7 +44,7 @@ func (a UsersApi) Create(c *gin.Context) {
 
 	mUser := models.User{
 		Username:  strings.TrimSpace(param.Username),
-		Password:  cmn.PasswordEncryption(param.Password),
+		Password:  func() string { h, _ := password.Hash(param.Password); return h }(),
 		Name:      param.Name,
 		HeadImage: param.HeadImage,
 		Status:    1,
@@ -161,7 +161,7 @@ func (a UsersApi) Update(c *gin.Context) {
 
 	// 密码不为默认“-”空，修改密码
 	if param.Password != "-" {
-		param.Password = cmn.PasswordEncryption(param.Password)
+		param.Password, _ = password.Hash(param.Password)
 		allowField = append(allowField, "Password")
 	}
 
