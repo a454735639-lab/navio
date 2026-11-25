@@ -26,6 +26,17 @@ const infoModalState = ref<InfoModalState>({
   fileInfo: null,
 })
 
+function beforeUpload(data: { file: { name: string, type?: string } }) {
+  const name = (data.file?.name || '').toLowerCase()
+  const dot = name.lastIndexOf('.')
+  const ext = dot >= 0 ? name.slice(dot) : ''
+  if (IMAGE_EXTS.includes(ext)) {
+    ms.warning(t('apps.uploadsFileManager.imageUseGallery'))
+    return false
+  }
+  return true
+}
+
 function handleUploadFinish({ event }: { event?: ProgressEvent }) {
   const target = (event as any)?.target
   if (!target?.response) {
@@ -81,10 +92,12 @@ function downloadFile(item: File.Info) {
 
 async function getFileList() {
   loading.value = true
-  const { data } = await getList<Common.ListResponse<File.Info[]>>().finally(() => {
+  const { data } = await getList<Common.ListResponse<File.Info[]>>({ type: 0 })
+  .finally(() => {
     loading.value = false
   })
-  imageList.value = data.list
+  // 文件管理只显示非图片文件，图片统一走「图库」
+  imageList.value = data.list.filter(f => !IMAGE_EXTS.includes((f.ext || '').toLowerCase()))
 }
 
 async function copyImageUrl(text: string) {
@@ -149,6 +162,9 @@ onMounted(() => {
     <NCard style="border-radius:10px" size="small">
       <NAlert type="info" :bordered="false">
         {{ $t('apps.uploadsFileManager.alertText') }}
+        <div class="mt-1 opacity-70">
+          {{ $t('apps.uploadsFileManager.filesOnlyTip') }}
+        </div>
       </NAlert>
 
       <div class="flex items-center gap-2 mt-2">
@@ -159,6 +175,7 @@ onMounted(() => {
           :data="{ type: 0 }"
           :show-file-list="false"
           multiple
+          :before-upload="beforeUpload"
           @finish="handleUploadFinish"
         >
           <NButton type="primary" size="small">

@@ -186,8 +186,20 @@ func (a *FileApi) UploadFiles(c *gin.Context) {
 func (a *FileApi) GetList(c *gin.Context) {
 	list := []models.File{}
 	userInfo, _ := base.GetCurrentUserInfo(c)
+
+	// 可选按类型过滤：不传则返回全部（兼容旧前端）
+	req := struct {
+		Type *int `json:"type"`
+	}{}
+	_ = c.ShouldBindBodyWith(&req, binding.JSON)
+
+	query := global.Db.Model(&models.File{}).Where("user_id = ?", userInfo.ID)
+	if req.Type != nil {
+		query = query.Where("type = ?", *req.Type)
+	}
+
 	var count int64
-	if err := global.Db.Order("created_at desc").Find(&list, "user_id=?", userInfo.ID).Count(&count).Error; err != nil {
+	if err := query.Order("created_at desc").Find(&list).Count(&count).Error; err != nil {
 		apiReturn.ErrorDatabase(c, err.Error())
 		return
 	}

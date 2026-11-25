@@ -1,8 +1,9 @@
 import { post } from '@/utils/request'
 
-export function getList<T>() {
+export function getList<T>(params?: { type?: number }) {
   return post<T>({
     url: '/file/getList',
+    data: params || {},
   })
 }
 

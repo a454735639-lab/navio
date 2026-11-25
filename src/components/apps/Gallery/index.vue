@@ -45,7 +45,7 @@ function imageUrl(src: string) {
 
 async function getFileList() {
   loading.value = true
-  await getUserImagesList<Common.ListResponse<File.Info[]>>({ page: 1, pageSize: 100 }).finally(() => {
+  await getUserImagesList<Common.ListResponse<File.Info[]>>({ page: 1, pageSize: 200, type: 3 }).finally(() => {
     loading.value = false
   }).then((res) => {
     imageList.value = res.data.list
