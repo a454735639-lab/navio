@@ -89,6 +89,8 @@ declare namespace Panel {
         netModeChangeButtonShow?: boolean
         netModeChangeAuto?: boolean
         netModeChangeAutoMaxPingMs?: number
+        netProbeLanUrl?: string
+        netProbeTsUrl?: string
     }
 
     interface userConfig {

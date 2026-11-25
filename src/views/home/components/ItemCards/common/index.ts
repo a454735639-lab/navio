@@ -18,6 +18,10 @@ let lastProbe: { origin: string, ok: boolean, ms: number | null, at: number } | 
 
 export function getNetworkStatus() {
   const entry = window.location.hostname
+  if (roleProbeCache.lan?.ok && Date.now() - roleProbeCache.lan.at < ROLE_PROBE_TTL)
+    return { mode: 'lan', ms: null, at: roleProbeCache.lan.at }
+  if (roleProbeCache.ts?.ok && Date.now() - roleProbeCache.ts.at < ROLE_PROBE_TTL)
+    return { mode: 'tailnet', ms: null, at: roleProbeCache.ts.at }
   const mode = isTailnetHost(entry)
     ? 'tailnet'
     : (panelState.networkMode === PanelStateNetworkModeEnum.lan ? 'lan' : 'wan')
@@ -132,6 +136,41 @@ export function clearNetworkCache() {
  * - https 页面探测 http 内网会被浏览器按混合内容直接拦截，这里提前短路，避免无谓等待
  * - 结果缓存 60s，避免每次点击卡片都探测
  */
+/** https 探针（lan-probe / ts-probe）：镜像返回 204，用来判断当前网络位置 */
+const roleProbeCache: Record<string, { ok: boolean, at: number }> = {}
+const ROLE_PROBE_TTL = 60_000
+
+async function probeHttps(url: string, timeout = 800): Promise<boolean> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeout)
+  try {
+    await fetch(url, { method: 'GET', mode: 'no-cors', cache: 'no-store', signal: controller.signal })
+    return true
+  }
+  catch {
+    return false
+  }
+  finally {
+    clearTimeout(timer)
+  }
+}
+
+export async function probeRole(role: 'lan' | 'ts', url: string | undefined, force = false): Promise<boolean> {
+  if (!url)
+    return false
+  const cached = roleProbeCache[role]
+  if (!force && cached && Date.now() - cached.at < ROLE_PROBE_TTL)
+    return cached.ok
+  const ok = await probeHttps(url)
+  roleProbeCache[role] = { ok, at: Date.now() }
+  return ok
+}
+
+export function clearRoleProbeCache() {
+  delete roleProbeCache.lan
+  delete roleProbeCache.ts
+}
+
 export async function detectLanReachable(lanUrl: string, timeout?: number, force = false): Promise<boolean> {
   const origin = parseOrigin(lanUrl)
   if (!origin)
@@ -221,6 +260,21 @@ export async function getItemUrl(itemInfo: Panel.ItemInfo, timeout?: number) {
   // Tailscale 入口：优先用「默认地址」里排在前面的地址（如 100.66），不再探测
   if (isTailnetHost(window.location.hostname)) {
     return wanList[0] || lanList[0] || ''
+  }
+
+  // https 探针：先判断在家还是在 tailnet，命中即按层返回（https 页面也可用）
+  const lanProbe = panelState.panelConfig.netProbeLanUrl
+  const tsProbe = panelState.panelConfig.netProbeTsUrl
+  if (await probeRole('lan', lanProbe)) {
+    syncPanelMode(true)
+    return lanList[0] || wanList[0] || ''
+  }
+  if (await probeRole('ts', tsProbe)) {
+    const tsUrl = wanList.find(u => /^https?:\/\/(100\.|.*\.ts\.net)/i.test(u)) || wanList[0]
+    if (tsUrl) {
+      syncPanelMode(true)
+      return tsUrl
+    }
   }
 
   // 入口就是内网地址：直接用内网第一顺位，0ms

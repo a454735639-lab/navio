@@ -36,6 +36,8 @@ export function defaultStatePanelConfig(): Panel.panelConfig {
     netModeChangeButtonShow: true,
     netModeChangeAuto: false,
     netModeChangeAutoMaxPingMs: 600,
+    netProbeLanUrl: 'https://lan-probe.454735639.xyz:8443/',
+    netProbeTsUrl: 'https://ts-probe.454735639.xyz:8443/',
   }
 }
 

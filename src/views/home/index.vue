@@ -10,7 +10,7 @@ import { getList as getGroupList } from '@/api/panel/itemIconGroup'
 import { apiRespErrMsg, setTitle, updateLocalUserInfo } from '@/utils/cmn'
 import { useTriggerUpdateItemData } from '@/hooks/useTriggerUpdateItemData'
 import { getSiteStting } from '@/api/openness'
-import { clearNetworkCache, getNetworkStatus, warmupNetworkMode } from './components/ItemCards/common'
+import { clearNetworkCache, clearRoleProbeCache, getNetworkStatus, probeRole, warmupNetworkMode } from './components/ItemCards/common'
 import { defaultSetting } from '@/store/modules/app/helper'
 
 import { useAccountManagerStore, useAppStore, useAuthStore, usePanelState } from '@/store'
@@ -287,8 +287,14 @@ function labelNetwork() {
   return 'WAN'
 }
 
-function handleNetworkChange() {
+async function handleNetworkChange() {
   clearNetworkCache()
+  clearRoleProbeCache()
+  await Promise.all([
+    probeRole('lan', panelState.panelConfig.netProbeLanUrl, true),
+    probeRole('ts', panelState.panelConfig.netProbeTsUrl, true),
+  ]).catch(() => {})
+  refreshNetStatus()
   warmupNetworkMode(collectLanUrls(items.value), panelState.panelConfig.netModeChangeAutoMaxPingMs)
 }
 
@@ -311,6 +317,9 @@ onMounted(async () => {
   // 设置标题
   if (panelState.panelConfig.logoText)
     setTitle(panelState.panelConfig.logoText)
+
+  // 首屏就探一次网络位置（lan/ts 探针），点击卡片零等待
+  handleNetworkChange()
 
   // 后台静默刷新：页面可见时每 30s 复探，网络切换后 30s 内必纠正
   networkTimer = setInterval(() => {
