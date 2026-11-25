@@ -435,7 +435,7 @@
     "inputIconName": "请输入图标名称",
     "inputIconUrlOrUpload": "输入图标地址或上传",
     "lanUrl": "内网地址",
-    "lanUrlInputPlaceholder": "http(s)://（内网环境，会跳转该地址）",
+      "lanUrlInputPlaceholder": "http(s):// — 可填多个，逗号分隔，按顺序探测（如 http://192.168.3.12:8096, http://100.66.1.2:8096）。命中第一个可用的就用它，全不通再走外网地址。",
     "moreOptions": "更多选项",
     "newWindowOpen": "新窗口打开",
     "onlineIcon": "在线图标",

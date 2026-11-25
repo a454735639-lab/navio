@@ -3,7 +3,7 @@ import { nextTick, ref } from 'vue'
 import { NDropdown } from 'naive-ui'
 import type { DropdownOption } from 'naive-ui'
 import StandardIcon from './common/StandardIcon.vue'
-import { getItemUrl } from './common'
+import { getItemUrl, splitLanUrls } from './common'
 import type { PanelPanelConfigStyleEnum } from '@/enums'
 import { t } from '@/locales'
 import { PanelStateNetworkModeEnum } from '@/enums'
@@ -112,7 +112,7 @@ async function handleMousedowClick(event: MouseEvent) {
   }
 }
 
-// // 获取项目地址，识别当前内外网环境返回地址，废弃-采用 import { getItemUrl } from './common' 2024年12月1日记录
+// // 获取项目地址，识别当前内外网环境返回地址，废弃-采用 import { getItemUrl, splitLanUrls } from './common' 2024年12月1日记录
 // function getItemUrl() {
 //   let jumpUrl = ''
 //   if (props.itemInfo)
@@ -127,7 +127,7 @@ async function handleMousedowClick(event: MouseEvent) {
 function handleRightMenuSelect(key: string | number) {
   dropdownShow.value = false
   // console.log(currentRightSelectItem, key)
-  let jumpUrl = panelState.networkMode === PanelStateNetworkModeEnum.lan ? props.itemInfo?.lanUrl : props.itemInfo?.url
+  let jumpUrl = panelState.networkMode === PanelStateNetworkModeEnum.lan ? (splitLanUrls(props.itemInfo?.lanUrl)[0] || props.itemInfo?.url) : props.itemInfo?.url
   if (props.itemInfo?.lanUrl === '')
     jumpUrl = props.itemInfo.url
   switch (key) {
@@ -140,7 +140,7 @@ function handleRightMenuSelect(key: string | number) {
       break
     case 'openLanUrl':
       if (props.itemInfo && props.itemInfo.lanUrl)
-        openPage(props.itemInfo?.openMethod, props.itemInfo.lanUrl, props.itemInfo?.title)
+        openPage(props.itemInfo?.openMethod, splitLanUrls(props.itemInfo.lanUrl)[0] || props.itemInfo.lanUrl, props.itemInfo?.title)
       break
     case 'edit':
       // 这里有个奇怪的问题，如果不使用{...}的方式 父组件的值会同步修改 标记一下

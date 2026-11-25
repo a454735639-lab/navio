@@ -36,6 +36,11 @@ function clampTimeout(v: number | undefined): number {
   return Math.min(TIMEOUT_MAX, Math.max(TIMEOUT_MIN, n))
 }
 
+/** 内网地址支持写多个，逗号/空格分隔，按顺序探测（如 192.168 在前、100.66 在后） */
+export function splitLanUrls(raw: string | undefined): string[] {
+  return (raw || '').split(/[,\s]+/).map(v => v.trim()).filter(Boolean)
+}
+
 /** 是否是内网/本机地址（用于入口快速判定，0ms 得出结果） */
 export function isPrivateHost(hostname: string): boolean {
   const h = (hostname || '').toLowerCase().replace(/^\[|\]$/g, '')
@@ -181,37 +186,57 @@ export async function getItemUrl(itemInfo: Panel.ItemInfo, timeout?: number) {
   if (!itemInfo.lanUrl)
     return itemInfo.url
 
+  const candidates = splitLanUrls(itemInfo.lanUrl)
+
   if (!panelState.panelConfig.netModeChangeAuto)
-    return (panelState.networkMode === PanelStateNetworkModeEnum.lan ? itemInfo.lanUrl : itemInfo.url) as string
+    return (panelState.networkMode === PanelStateNetworkModeEnum.lan ? (candidates[0] || itemInfo.url) : itemInfo.url) as string
 
   if (isPrivateHost(window.location.hostname)) {
     syncPanelMode(true)
-    return itemInfo.lanUrl
+    return (candidates[0] || itemInfo.url) as string
   }
 
-  // 缓存命中就直接用，点击零等待
-  const origin = parseOrigin(itemInfo.lanUrl)
-  if (origin) {
+  if (candidates.length === 0)
+    return itemInfo.url
+
+  // 逐级探测：192.168 → 100.66 → …，命中即用；全部失败回落外网地址
+  const wait = Math.min(clampTimeout(timeout), 500)
+  const mixed = window.location.protocol === 'https:'
+  let mixedBlocked = false
+
+  for (const candidate of candidates) {
+    const origin = parseOrigin(candidate)
+    if (!origin)
+      continue
+
+    // https 页面无法探测 http 地址，记下来，最后按手动模式兜底
+    if (mixed && origin.startsWith('http://')) {
+      mixedBlocked = true
+      continue
+    }
+
     const cached = probeCache.get(origin)
     if (cached && Date.now() - cached.at < CACHE_TTL) {
-      syncPanelMode(cached.ok)
-      return (cached.ok ? itemInfo.lanUrl : itemInfo.url) as string
+      if (cached.ok) {
+        syncPanelMode(true)
+        return candidate
+      }
+      continue
+    }
+
+    const ok = await detectLanReachable(candidate, wait)
+    if (ok) {
+      syncPanelMode(true)
+      return candidate
     }
   }
 
-  // 未命中才探测，且点击路径上的等待上限压到 500ms
-  const wait = Math.min(clampTimeout(timeout), 500)
-  const hasMixedContent = window.location.protocol === 'https:' && (parseOrigin(itemInfo.lanUrl) || '').startsWith('http://')
+  // 混合内容场景：不强行判外网，尊重手动切换
+  if (mixedBlocked && panelState.networkMode === PanelStateNetworkModeEnum.lan)
+    return candidates[0]
 
-  const ok = await detectLanReachable(itemInfo.lanUrl, wait)
-  // https 页面无法探测 http 内网时，不强行判定为外网，尊重手动切换结果
-  if (!hasMixedContent)
-    syncPanelMode(ok)
-
-  const useLan = hasMixedContent
-    ? panelState.networkMode === PanelStateNetworkModeEnum.lan
-    : ok
-  return (useLan ? itemInfo.lanUrl : itemInfo.url) as string
+  syncPanelMode(false)
+  return itemInfo.url
 }
 
 /**
@@ -220,7 +245,7 @@ export async function getItemUrl(itemInfo: Panel.ItemInfo, timeout?: number) {
 export async function warmupNetworkMode(lanUrls: string[], timeout?: number) {
   if (!panelState.panelConfig.netModeChangeAuto)
     return
-  const origins = [...new Set(lanUrls.map(u => parseOrigin(u)).filter((v): v is string => !!v))].slice(0, 12)
+  const origins = [...new Set(lanUrls.flatMap(u => splitLanUrls(u)).map(u => parseOrigin(u)).filter((v): v is string => !!v))].slice(0, 12)
   if (origins.length === 0)
     return
   const results = await Promise.all(origins.map(o => detectLanReachable(o, timeout, true).catch(() => false)))

@@ -4,7 +4,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import type { DropdownOption } from 'naive-ui'
 import { NDropdown, NEllipsis, NFlex, NSpin, useMessage } from 'naive-ui'
 import { useDockerCardStore } from './dockerCard/store'
-import { getItemUrl } from './common'
+import { getItemUrl, splitLanUrls } from './common'
 import type { PanelPanelConfigStyleEnum } from '@/enums'
 import { IframeLayer, ItemCard, ItemIcon, STip } from '@/components/common'
 import { t } from '@/locales'
@@ -191,7 +191,7 @@ async function handleMousedowClick(event: MouseEvent) {
 function handleRightMenuSelect(key: string | number) {
   dropdownShow.value = false
   // console.log(currentRightSelectItem, key)
-  let jumpUrl = panelState.networkMode === PanelStateNetworkModeEnum.lan ? itemCardInfo.value?.lanUrl : itemCardInfo.value?.url
+  let jumpUrl = panelState.networkMode === PanelStateNetworkModeEnum.lan ? (splitLanUrls(itemCardInfo.value?.lanUrl)[0] || itemCardInfo.value?.url) : itemCardInfo.value?.url
   if (itemCardInfo.value?.lanUrl === '')
     jumpUrl = itemCardInfo.value.url
   switch (key) {
@@ -204,7 +204,7 @@ function handleRightMenuSelect(key: string | number) {
       break
     case 'openLanUrl':
       if (itemCardInfo.value && itemCardInfo.value.lanUrl)
-        openPage(itemCardInfo.value?.openMethod, itemCardInfo.value.lanUrl, itemCardInfo.value?.title)
+        openPage(itemCardInfo.value?.openMethod, splitLanUrls(itemCardInfo.value?.lanUrl)[0] || itemCardInfo.value?.lanUrl, itemCardInfo.value?.title)
       break
 
     case 'startContainer':
