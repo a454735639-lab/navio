@@ -36,7 +36,7 @@ sun-panel 容器
 # docker-compose.yaml 片段
 services:
   sun-panel:
-    image: ghcr.io/xxx/sun-panel:latest
+    image: ghcr.io/a454735639-lab/navio:latest
     ports:
       - "3002:3002"
       - "8443:8443"          # 探针端口

@@ -15,7 +15,7 @@ export function defaultStatePanelConfig(): Panel.panelConfig {
     iconTextInfoHideDescription: false,
     iconTextIconHideTitle: false,
     logoShow: true,
-    logoText: 'Sun-Panel',
+    logoText: 'Navio',
     logoImageSrc: '',
     clockShow: true,
     clockShowSecond: false,
