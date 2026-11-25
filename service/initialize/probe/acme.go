@@ -114,7 +114,12 @@ func (p *acmeProvider) issue(certFile, keyFile string) error {
 	if err != nil {
 		return err
 	}
-	if err := client.Challenge.SetDNS01Provider(dnsProvider, dns01.AddRecursiveNameservers([]string{"1.1.1.1:53", "8.8.8.8:53"})); err != nil {
+	opts := []dns01.ChallengeOption{
+		dns01.AddRecursiveNameservers([]string{"1.1.1.1:53", "8.8.8.8:53"}),
+		dns01.AddDNSTimeout(2 * time.Minute),
+		dns01.DisableCompletePropagationRequirement(),
+	}
+	if err := client.Challenge.SetDNS01Provider(dnsProvider, opts...); err != nil {
 		return err
 	}
 	if _, err := client.Registration.Register(registration.RegisterOptions{TermsOfServiceAgreed: true}); err != nil {
