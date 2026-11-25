@@ -4,6 +4,7 @@ import (
 	"sun-panel/api/api_v1/common/apiReturn"
 	"sun-panel/api/api_v1/common/base"
 	"sun-panel/global"
+	"sun-panel/lib/cmn"
 	"sun-panel/lib/cmn/systemSetting"
 	"sun-panel/models"
 
@@ -35,7 +36,7 @@ func PublicModeInterceptor(c *gin.Context) {
 
 	// 尝试从缓存中获取用户信息
 	if userInfo, success := global.UserToken.Get(token); success {
-		global.Logger.Debug("缓存的用户TOKEN-1:", token)
+		global.Logger.Debug("缓存的用户TOKEN-1:", cmn.MaskToken(token))
 		c.Set("userInfo", userInfo)
 		return
 	}
@@ -46,7 +47,7 @@ func PublicModeInterceptor(c *gin.Context) {
 
 	// 再次检查缓存，以防在等待锁的时候已经被其他请求填充了缓存
 	if userInfo, success := global.UserToken.Get(token); success {
-		global.Logger.Debug("缓存的用户TOKEN:", token)
+		global.Logger.Debug("缓存的用户TOKEN:", cmn.MaskToken(token))
 		c.Set("userInfo", userInfo)
 		return
 	}
@@ -59,7 +60,7 @@ func PublicModeInterceptor(c *gin.Context) {
 		global.CUserToken.SetDefault(cToken, token)
 		c.Set("userInfo", info)
 	} else {
-		global.Logger.Debug("数据库查询用户失败", token)
+		global.Logger.Debug("数据库查询用户失败", cmn.MaskToken(token))
 		apiReturn.ErrorByCode(c, apiReturn.ErrCodeTokenExpired)
 		c.Abort()
 	}

@@ -225,7 +225,7 @@ func (p *ProAuthType) Login(username, password string) error {
 		return err
 	}
 
-	global.Logger.Debug(username+" token", resp.Token)
+	global.Logger.Debug(username, "token", cmn.MaskToken(resp.Token))
 
 	if p.ProAuthDataShortTerm == nil {
 		p.ProAuthDataShortTerm = &ProAuthDataShortTerm{}
@@ -285,7 +285,7 @@ func (p *ProAuthType) AutoLogin() error {
 		return err
 	}
 
-	global.Logger.Debug(param.Username+" token", resp.Token)
+	global.Logger.Debug(param.Username, "token", cmn.MaskToken(resp.Token))
 
 	if p.ProAuthDataShortTerm == nil {
 		p.ProAuthDataShortTerm = &ProAuthDataShortTerm{}

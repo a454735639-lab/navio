@@ -281,9 +281,9 @@ function refreshNetStatus() {
 
 function labelNetwork() {
   if (netStatus.value.mode === 'tailnet')
-    return 'TS'
+    return netStatus.value.ms !== null ? `TS ${netStatus.value.ms}ms` : 'TS'
   if (netStatus.value.mode === 'lan')
-    return netStatus.value.ms !== null ? `LAN · ${netStatus.value.ms}ms` : 'LAN'
+    return netStatus.value.ms !== null ? `LAN ${netStatus.value.ms}ms` : 'LAN'
   return 'WAN'
 }
 
@@ -401,12 +401,17 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div v-if="panelState.panelConfig.netModeChangeAuto" class="fixed bottom-3 right-3 z-50">
-    <NButton size="tiny" round secondary :title="t('apps.baseSettings.netModeChangeAuto')" @click="handleNetworkChange(); refreshNetStatus()">
-      <span :class="netStatus.mode === 'lan' ? 'text-green-500' : (netStatus.mode === 'tailnet' ? 'text-blue-500' : 'text-gray-400')">
-        {{ labelNetwork() }}
-      </span>
-    </NButton>
+  <!-- 自动模式：右上角只显示当前网络与探测延迟，不显示手动切换 -->
+  <div
+    v-if="panelState.panelConfig.netModeChangeAuto"
+    class="fixed z-50 rounded-lg bg-[#2a2a2a6b] px-2 py-1 text-[11px] backdrop-blur-[2px] shadow-[0_0_10px_2px_rgba(0,0,0,0.2)] select-none"
+    :style="{ top: '76px', right: '20px' }"
+    :title="t('apps.baseSettings.netModeChangeAuto')"
+    @click="handleNetworkChange(); refreshNetStatus()"
+  >
+    <span :class="netStatus.mode === 'lan' ? 'text-green-400' : (netStatus.mode === 'tailnet' ? 'text-blue-400' : 'text-gray-300')">
+      {{ labelNetwork() }}
+    </span>
   </div>
 
   <div class="w-full h-full sun-main">
@@ -615,7 +620,7 @@ onUnmounted(() => {
       class="fixed-element bg-[#2a2a2a6b] rounded-lg shadow-[0_0_10px_2px_rgba(0,0,0,0.2)] p-[2px] flex backdrop-blur-[2px]"
     >
       <div
-        v-if="panelState.networkMode === PanelStateNetworkModeEnum.lan && panelState.panelConfig.netModeChangeButtonShow"
+        v-if="panelState.networkMode === PanelStateNetworkModeEnum.lan && panelState.panelConfig.netModeChangeButtonShow && !panelState.panelConfig.netModeChangeAuto"
         class="float-btn flex items-center justify-center"
         :title="t('panelHome.changeToWanModel')"
         @click="handleChangeNetwork(PanelStateNetworkModeEnum.wan)"
@@ -624,7 +629,7 @@ onUnmounted(() => {
       </div>
 
       <div
-        v-if="panelState.networkMode !== PanelStateNetworkModeEnum.lan && panelState.panelConfig.netModeChangeButtonShow"
+        v-if="panelState.networkMode !== PanelStateNetworkModeEnum.lan && panelState.panelConfig.netModeChangeButtonShow && !panelState.panelConfig.netModeChangeAuto"
         class="float-btn flex items-center justify-center"
         :title="t('panelHome.changeToLanModel')"
         @click="handleChangeNetwork(PanelStateNetworkModeEnum.lan)"
@@ -634,7 +639,7 @@ onUnmounted(() => {
 
       <!-- Tailscale 模式：https 页面无法探测时，一键走 100.x 地址 -->
       <div
-        v-if="panelState.networkMode !== PanelStateNetworkModeEnum.tailnet && panelState.panelConfig.netModeChangeButtonShow"
+        v-if="panelState.networkMode !== PanelStateNetworkModeEnum.tailnet && panelState.panelConfig.netModeChangeButtonShow && !panelState.panelConfig.netModeChangeAuto"
         class="float-btn flex items-center justify-center text-[11px] font-bold text-white"
         :title="t('panelHome.useTailnet')"
         @click="handleChangeNetwork(PanelStateNetworkModeEnum.tailnet)"

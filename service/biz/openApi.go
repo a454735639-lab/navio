@@ -27,7 +27,7 @@ func (o *OpanApiType) RefreshToken(userId uint) (openTokenInfo string, gormErr e
 	buildTokenOver := false
 	for !buildTokenOver {
 		newToken = o.buildToken()
-		global.Logger.Debugln("newToken", newToken)
+		global.Logger.Debugln("newToken", cmn.MaskToken(newToken))
 		if _, err := o.GetUserInfo(newToken); err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				// 创建token

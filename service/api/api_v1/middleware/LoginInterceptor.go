@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"sun-panel/lib/cmn"
 	"sun-panel/api/api_v1/common/apiReturn"
 	"sun-panel/global"
 	"sun-panel/models"
@@ -41,7 +42,7 @@ func LoginInterceptor(c *gin.Context) {
 		return
 	}
 
-	global.Logger.Debug("准备查询数据库的用户资料", token)
+	global.Logger.Debug("准备查询数据库的用户资料", cmn.MaskToken(token))
 
 	mUser := models.User{}
 	// 去库中查询是否存在该用户；否则返回错误
