@@ -146,7 +146,7 @@ func Apply(cfg Config) {
 
 	reloader := &certReloader{certFile: certFile, keyFile: keyFile}
 	srv := &http.Server{
-		Addr:              fmt.Sprintf(":%d", cfg.Port),
+		Addr:              fmt.Sprintf("%s:%d", cfg.BindAddr, cfg.Port),
 		Handler:           handler(),
 		ReadHeaderTimeout: 5 * time.Second,
 		TLSConfig:         &tls.Config{GetCertificate: reloader.getCertificate, MinVersion: tls.VersionTLS12},
@@ -166,7 +166,7 @@ func Apply(cfg Config) {
 				global.Logger.Errorf("[probe] panic: %v", r)
 			}
 		}()
-		global.Logger.Infof("[probe] listening on :%d (provider=%s)", cfg.Port, provider.Name())
+		global.Logger.Infof("[probe] listening on %s:%d (provider=%s)", cfg.BindAddr, cfg.Port, provider.Name())
 		if err := srv.ListenAndServeTLS("", ""); err != nil && err != http.ErrServerClosed {
 			global.Logger.Errorf("[probe] server stopped: %v", err)
 		}

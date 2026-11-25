@@ -87,6 +87,10 @@ func (a *FileApi) UploadImg(c *gin.Context) {
 		switch err {
 		case base.ErrUploadExtensionNameNotAllowed:
 			apiReturn.ErrorByCode(c, apiReturn.ErrCodeUnsupportedFileFormat)
+		case base.ErrUploadExceedMaxSize:
+			apiReturn.ErrorCode(c, 1302, "file too large", nil)
+		case base.ErrUploadContentMismatch:
+			apiReturn.ErrorCode(c, 1303, "file content does not match its extension", nil)
 		default:
 			global.Logger.Error(err.Error())
 			apiReturn.ErrorByCode(c, apiReturn.ErrCodeUploadFailed)
@@ -123,6 +127,8 @@ func (a *FileApi) UploadFile(c *gin.Context) {
 			apiReturn.ErrorByCode(c, apiReturn.ErrCodeUnsupportedFileFormat)
 		case base.ErrUploadExceedMaxSize:
 			apiReturn.ErrorCode(c, 1302, "file too large", nil)
+		case base.ErrUploadContentMismatch:
+			apiReturn.ErrorCode(c, 1303, "file content does not match its extension", nil)
 		default:
 			global.Logger.Error(err.Error())
 			apiReturn.ErrorByCode(c, apiReturn.ErrCodeUploadFailed)

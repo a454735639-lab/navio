@@ -21,6 +21,7 @@ const (
 type Config struct {
 	Enabled  bool   `json:"enabled"`
 	Port     int    `json:"port"`
+	BindAddr string `json:"bindAddr,omitempty"`
 	Provider string `json:"provider"`
 	CertPath string `json:"certPath"`
 	KeyPath  string `json:"keyPath"`
@@ -74,6 +75,7 @@ func normalize(cfg Config) Config {
 	if cfg.Port == 0 {
 		cfg.Port = 8443
 	}
+	cfg.BindAddr = strings.TrimSpace(cfg.BindAddr)
 	if cfg.Provider == "" {
 		cfg.Provider = ProviderPath
 	}

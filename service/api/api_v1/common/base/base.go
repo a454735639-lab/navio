@@ -41,7 +41,8 @@ const (
 
 var (
 	ErrUploadExtensionNameNotAllowed = errors.New("extension not allowed") // "上传文件类型不允许"
-	ErrUploadExceedMaxSize           = errors.New("exceeds maximum size")  // "上传文件超出最大尺寸"
+	ErrUploadExceedMaxSize           = errors.New("exceeds maximum size")
+	ErrUploadContentMismatch         = errors.New("file content does not match its extension")  // "上传文件超出最大尺寸"
 )
 
 // 验证输入是否有效并返回错误
@@ -96,6 +97,39 @@ func validateInputStruct(params interface{}) (errMsg string, err error) {
 // 	// })
 // }
 
+
+// imageExtMagic 常见图片格式的文件头，用于防"改扩展名伪装"上传
+var imageExtMagic = map[string][][]byte{
+	".png":  {{0x89, 'P', 'N', 'G'}},
+	".jpg":  {{0xFF, 0xD8, 0xFF}},
+	".jpeg": {{0xFF, 0xD8, 0xFF}},
+	".gif":  {[]byte("GIF87a"), []byte("GIF89a")},
+	".webp": {[]byte("RIFF")},
+	".bmp":  {[]byte("BM")},
+	".ico":  {{0x00, 0x00, 0x01, 0x00}},
+	".avif": {[]byte("ftyp")},
+	".heic": {[]byte("ftyp")},
+}
+
+// sniffImage 校验图片文件头；svg 是文本格式，单独判断是否以 <svg / <?xml 开头
+func sniffImage(ext string, head []byte) bool {
+	ext = strings.ToLower(ext)
+	if ext == ".svg" {
+		trimmed := strings.TrimSpace(string(head))
+		return strings.HasPrefix(trimmed, "<svg") || strings.HasPrefix(trimmed, "<?xml")
+	}
+	magics, ok := imageExtMagic[ext]
+	if !ok {
+		return true // 非图片扩展名不做内容校验
+	}
+	for _, m := range magics {
+		if len(head) >= len(m) && string(head[:len(m)]) == string(m) {
+			return true
+		}
+	}
+	return false
+}
+
 // 保存图片并将记录保存到数据库中
 func UploadFileAndSave(c *gin.Context, agreeExtNames []string, maxSize int64) (fileInfo models.File, err error) {
 	userInfo, _ := base.GetCurrentUserInfo(c)
@@ -119,6 +153,17 @@ func UploadFileAndSave(c *gin.Context, agreeExtNames []string, maxSize int64) (f
 		if maxSize != 0 && f.Size > maxSize {
 			err = ErrUploadExceedMaxSize
 			return
+		}
+
+		// 内容嗅探：防止把 html/脚本改扩展名伪装成图片
+		if sf, openErr := f.Open(); openErr == nil {
+			head := make([]byte, 64)
+			n, _ := sf.Read(head)
+			sf.Close()
+			if !sniffImage(fileExt, head[:n]) {
+				err = ErrUploadContentMismatch
+				return
+			}
 		}
 
 		fileName := cmn.Md5(fmt.Sprintf("%s%s", f.Filename, time.Now().String()))
