@@ -36,7 +36,7 @@ function clampTimeout(v: number | undefined): number {
   return Math.min(TIMEOUT_MAX, Math.max(TIMEOUT_MIN, n))
 }
 
-/** 内网地址支持写多个，逗号/空格分隔，按顺序探测（如 192.168 在前、100.66 在后） */
+/** 地址字段支持写多个，逗号/空格分隔，按顺序探测（内网、默认地址均适用） */
 export function splitLanUrls(raw: string | undefined): string[] {
   return (raw || '').split(/[,\s]+/).map(v => v.trim()).filter(Boolean)
 }
@@ -183,75 +183,73 @@ export function pingUrl(url: string, attempts: number, timeout: number): Promise
 export async function getItemUrl(itemInfo: Panel.ItemInfo, timeout?: number) {
   if (!itemInfo)
     return ''
-  if (!itemInfo.lanUrl)
-    return itemInfo.url
 
-  const candidates = splitLanUrls(itemInfo.lanUrl)
+  const lanList = splitLanUrls(itemInfo.lanUrl)
+  const wanList = splitLanUrls(itemInfo.url)
+  const fallbackWan = wanList[wanList.length - 1] || ''
 
-  if (!panelState.panelConfig.netModeChangeAuto)
-    return (panelState.networkMode === PanelStateNetworkModeEnum.lan ? (candidates[0] || itemInfo.url) : itemInfo.url) as string
+  if (lanList.length === 0 && wanList.length <= 1)
+    return itemInfo.url || ''
 
-  if (isPrivateHost(window.location.hostname)) {
-    syncPanelMode(true)
-    return (candidates[0] || itemInfo.url) as string
+  // 手动模式：按选择直接取第一顺位
+  if (!panelState.panelConfig.netModeChangeAuto) {
+    if (panelState.networkMode === PanelStateNetworkModeEnum.lan)
+      return lanList[0] || wanList[0] || ''
+    return wanList[0] || ''
   }
 
-  if (candidates.length === 0)
-    return itemInfo.url
+  // 入口就是内网地址：直接用内网第一顺位，0ms
+  if (isPrivateHost(window.location.hostname)) {
+    syncPanelMode(true)
+    return lanList[0] || wanList[0] || ''
+  }
 
-  // 逐级探测：192.168 → 100.66 → …，命中即用；全部失败回落外网地址
   const wait = Math.min(clampTimeout(timeout), 500)
-  const deadline = performance.now() + 900 // 多级探测总预算，避免点击越等越久
+  const deadline = performance.now() + 900 // 多级探测总预算
   const mixed = window.location.protocol === 'https:'
   let mixedBlocked = false
 
-  for (const candidate of candidates) {
+  const tryOne = async (candidate: string): Promise<boolean> => {
     const origin = parseOrigin(candidate)
     if (!origin)
-      continue
+      return false
 
-    // https 页面无法探测 http 地址，记下来，最后按手动模式兜底
     if (mixed && origin.startsWith('http://')) {
       mixedBlocked = true
-      continue
+      return false
     }
 
     const cached = probeCache.get(origin)
-    if (cached && Date.now() - cached.at < CACHE_TTL) {
-      if (cached.ok) {
-        syncPanelMode(true)
-        return candidate
-      }
-      continue
-    }
+    if (cached && Date.now() - cached.at < CACHE_TTL)
+      return cached.ok
 
     const left = deadline - performance.now()
     if (left < 120)
-      break
-    const ok = await detectLanReachable(candidate, Math.min(wait, left))
-    if (ok) {
+      return false
+
+    return detectLanReachable(candidate, Math.min(wait, left))
+  }
+
+  // 1) 内网候选（家里/局域网）
+  for (const candidate of lanList) {
+    if (await tryOne(candidate)) {
       syncPanelMode(true)
       return candidate
     }
   }
 
-  // 混合内容场景：不强行判外网，尊重手动切换
-  if (mixedBlocked && panelState.networkMode === PanelStateNetworkModeEnum.lan)
-    return candidates[0]
+  // 2) 默认地址候选（如 tailnet 优先，域名兜底）
+  for (const candidate of wanList) {
+    if (await tryOne(candidate)) {
+      syncPanelMode(true)
+      return candidate
+    }
+  }
+
+  // https 页面无法探测时，尊重手动选择
+  if (mixedBlocked && panelState.networkMode === PanelStateNetworkModeEnum.lan && (lanList[0] || wanList[0]))
+    return lanList[0] || wanList[0] || ''
 
   syncPanelMode(false)
-  return itemInfo.url
-}
-
-/**
- * 预热：页面加载 / 网络事件后把所有内网 origin 探一遍，点击时直接命中缓存。
- */
-export async function warmupNetworkMode(lanUrls: string[], timeout?: number) {
-  if (!panelState.panelConfig.netModeChangeAuto)
-    return
-  const origins = [...new Set(lanUrls.flatMap(u => splitLanUrls(u)).map(u => parseOrigin(u)).filter((v): v is string => !!v))].slice(0, 12)
-  if (origins.length === 0)
-    return
-  const results = await Promise.all(origins.map(o => detectLanReachable(o, timeout, true).catch(() => false)))
-  syncPanelMode(results.some(Boolean))
+  return fallbackWan || wanList[0] || ''
 }

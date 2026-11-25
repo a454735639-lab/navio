@@ -136,7 +136,7 @@ function handleRightMenuSelect(key: string | number) {
       break
     case 'openWanUrl':
       if (props.itemInfo)
-        openPage(props.itemInfo?.openMethod, props.itemInfo?.url, props.itemInfo?.title)
+        openPage(props.itemInfo?.openMethod, splitLanUrls(props.itemInfo?.url)[0] || props.itemInfo?.url, props.itemInfo?.title)
       break
     case 'openLanUrl':
       if (props.itemInfo && props.itemInfo.lanUrl)

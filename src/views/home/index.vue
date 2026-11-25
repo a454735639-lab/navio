@@ -256,6 +256,8 @@ function collectLanUrls(list: ItemGroup[] | undefined): string[] {
     ;(g.items || []).forEach((it: Panel.ItemInfo) => {
       if (it && it.lanUrl)
         out.push(it.lanUrl)
+      if (it && it.url)
+        out.push(it.url)
     })
   })
   return out

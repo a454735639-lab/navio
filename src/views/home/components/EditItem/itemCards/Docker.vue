@@ -222,7 +222,7 @@ function handleChange(value: string, appInfo: SystemApp) {
       </template>
 
       <div class="w-full">
-        <UrlAddressInput v-model:url="model.url" v-model:icon-info="model.icon" placeholder="http(s)://" />
+        <UrlAddressInput v-model:url="model.url" v-model:icon-info="model.icon" :placeholder="$t('iconItem.urlInputPlaceholder')" />
       </div>
     </NFormItem>
 
@@ -241,7 +241,7 @@ function handleChange(value: string, appInfo: SystemApp) {
     <!-- <NFormItem path="url" :label="$t('iconItem.defaultUrl')">
       <div class="w-full">
         <NInputGroup>
-          <NInput v-model:value="model.url" type="text" :maxlength="1000" placeholder="http(s)://" />
+          <NInput v-model:value="model.url" type="text" :maxlength="1000" :placeholder="$t('iconItem.urlInputPlaceholder')" />
           <NButton :disabled="!model.url" :loading="getIconLoading[0]" @click="getIconByUrl(model.url, 0)">
             {{ $t('iconItem.getIcon') }}
           </NButton>

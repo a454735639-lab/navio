@@ -200,7 +200,7 @@ function handleRightMenuSelect(key: string | number) {
       break
     case 'openWanUrl':
       if (itemCardInfo.value)
-        openPage(itemCardInfo.value?.openMethod, itemCardInfo.value?.url, itemCardInfo.value?.title)
+        openPage(itemCardInfo.value?.openMethod, splitLanUrls(itemCardInfo.value?.url)[0] || itemCardInfo.value?.url, itemCardInfo.value?.title)
       break
     case 'openLanUrl':
       if (itemCardInfo.value && itemCardInfo.value.lanUrl)
