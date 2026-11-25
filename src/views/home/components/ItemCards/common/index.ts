@@ -201,6 +201,7 @@ export async function getItemUrl(itemInfo: Panel.ItemInfo, timeout?: number) {
 
   // 逐级探测：192.168 → 100.66 → …，命中即用；全部失败回落外网地址
   const wait = Math.min(clampTimeout(timeout), 500)
+  const deadline = performance.now() + 900 // 多级探测总预算，避免点击越等越久
   const mixed = window.location.protocol === 'https:'
   let mixedBlocked = false
 
@@ -224,7 +225,10 @@ export async function getItemUrl(itemInfo: Panel.ItemInfo, timeout?: number) {
       continue
     }
 
-    const ok = await detectLanReachable(candidate, wait)
+    const left = deadline - performance.now()
+    if (left < 120)
+      break
+    const ok = await detectLanReachable(candidate, Math.min(wait, left))
     if (ok) {
       syncPanelMode(true)
       return candidate
