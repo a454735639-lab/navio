@@ -280,6 +280,8 @@ function refreshNetStatus() {
 }
 
 function labelNetwork() {
+  if (netStatus.value.mode === 'tailnet')
+    return 'TS'
   if (netStatus.value.mode === 'lan')
     return netStatus.value.ms !== null ? `LAN · ${netStatus.value.ms}ms` : 'LAN'
   return 'WAN'
@@ -392,7 +394,7 @@ onUnmounted(() => {
 <template>
   <div v-if="panelState.panelConfig.netModeChangeAuto" class="fixed bottom-3 right-3 z-50">
     <NButton size="tiny" round secondary :title="t('apps.baseSettings.netModeChangeAuto')" @click="handleNetworkChange(); refreshNetStatus()">
-      <span :class="netStatus.mode === 'lan' ? 'text-green-500' : 'text-gray-400'">
+      <span :class="netStatus.mode === 'lan' ? 'text-green-500' : (netStatus.mode === 'tailnet' ? 'text-blue-500' : 'text-gray-400')">
         {{ labelNetwork() }}
       </span>
     </NButton>

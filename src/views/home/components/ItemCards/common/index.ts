@@ -17,8 +17,12 @@ let mixedContentWarned = false
 let lastProbe: { origin: string, ok: boolean, ms: number | null, at: number } | null = null
 
 export function getNetworkStatus() {
+  const entry = window.location.hostname
+  const mode = isTailnetHost(entry)
+    ? 'tailnet'
+    : (panelState.networkMode === PanelStateNetworkModeEnum.lan ? 'lan' : 'wan')
   return {
-    mode: panelState.networkMode === PanelStateNetworkModeEnum.lan ? 'lan' : 'wan',
+    mode,
     ms: lastProbe?.ms ?? null,
     at: lastProbe?.at ?? 0,
   }
@@ -39,6 +43,16 @@ function clampTimeout(v: number | undefined): number {
 /** 地址字段支持写多个，逗号/空格分隔，按顺序探测（内网、默认地址均适用） */
 export function splitLanUrls(raw: string | undefined): string[] {
   return (raw || '').split(/[,\s]+/).map(v => v.trim()).filter(Boolean)
+}
+
+/** 是否是 Tailscale 入口（MagicDNS 域名或 100.64.0.0/10 CGNAT） */
+export function isTailnetHost(hostname: string): boolean {
+  const h = (hostname || '').toLowerCase()
+  if (!h)
+    return false
+  if (h.endsWith('.ts.net'))
+    return true
+  return /^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./.test(h)
 }
 
 /** 是否是内网/本机地址（用于入口快速判定，0ms 得出结果） */
@@ -196,6 +210,11 @@ export async function getItemUrl(itemInfo: Panel.ItemInfo, timeout?: number) {
     if (panelState.networkMode === PanelStateNetworkModeEnum.lan)
       return lanList[0] || wanList[0] || ''
     return wanList[0] || ''
+  }
+
+  // Tailscale 入口：优先用「默认地址」里排在前面的地址（如 100.66），不再探测
+  if (isTailnetHost(window.location.hostname)) {
+    return wanList[0] || lanList[0] || ''
   }
 
   // 入口就是内网地址：直接用内网第一顺位，0ms
