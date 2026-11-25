@@ -401,19 +401,6 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <!-- 自动模式：右上角只显示当前网络与探测延迟，不显示手动切换 -->
-  <div
-    v-if="panelState.panelConfig.netModeChangeAuto"
-    class="fixed z-50 rounded-lg bg-[#2a2a2a6b] px-2 py-1 text-[11px] backdrop-blur-[2px] shadow-[0_0_10px_2px_rgba(0,0,0,0.2)] select-none"
-    :style="{ top: '76px', right: '20px' }"
-    :title="t('apps.baseSettings.netModeChangeAuto')"
-    @click="handleNetworkChange(); refreshNetStatus()"
-  >
-    <span :class="netStatus.mode === 'lan' ? 'text-green-400' : (netStatus.mode === 'tailnet' ? 'text-blue-400' : 'text-gray-300')">
-      {{ labelNetwork() }}
-    </span>
-  </div>
-
   <div class="w-full h-full sun-main">
     <div
       class="cover wallpaper" :style="{
@@ -619,6 +606,18 @@ onUnmounted(() => {
     <div
       class="fixed-element bg-[#2a2a2a6b] rounded-lg shadow-[0_0_10px_2px_rgba(0,0,0,0.2)] p-[2px] flex backdrop-blur-[2px]"
     >
+      <!-- 自动模式：延迟显示（与系统入口同一排，点击立即重新探测） -->
+      <div
+        v-if="panelState.panelConfig.netModeChangeAuto"
+        class="float-btn flex items-center justify-center text-[11px] font-bold select-none"
+        :title="t('apps.baseSettings.netModeChangeAuto')"
+        @click="handleNetworkChange(); refreshNetStatus()"
+      >
+        <span :class="netStatus.mode === 'lan' ? 'text-green-400' : (netStatus.mode === 'tailnet' ? 'text-blue-400' : 'text-gray-300')">
+          {{ labelNetwork() }}
+        </span>
+      </div>
+
       <div
         v-if="panelState.networkMode === PanelStateNetworkModeEnum.lan && panelState.panelConfig.netModeChangeButtonShow && !panelState.panelConfig.netModeChangeAuto"
         class="float-btn flex items-center justify-center"
