@@ -35,6 +35,9 @@ export const usePanelState = defineStore('panel', {
           // 旧版本默认 100/200ms，探测极易误判；升级后自动抬到一个可用值
           if (this.panelConfig.netModeChangeAuto && (this.panelConfig.netModeChangeAutoMaxPingMs ?? 0) < 300)
             this.panelConfig.netModeChangeAutoMaxPingMs = 600
+          // 自动模式也保留手动切换入口：https 场景下浏览器禁止探测，用户需要能手动选
+          if (this.panelConfig.netModeChangeAuto)
+            this.panelConfig.netModeChangeButtonShow = true
         }
         else
           this.resetPanelConfig() // 重置恢复默认

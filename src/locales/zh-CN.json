@@ -90,6 +90,7 @@
       "netModeChangeAuto": "自动选择",
       "netModeChangeAutoMaxPingMs": "连通测试延迟时间",
       "netModeChangeAutoTip": "当卡片设置了[内网地址]，会优先对[内网地址]进行连通测试，如果[内网地址]在设定的延迟时间内测试不通，将使用[默认地址]",
+      "netModeChangeAutoHttpsTip": "面板用 https 访问时，浏览器禁止探测 http 内网地址。请在局域网内改用 http://内网IP:3002 打开面板，或给内网地址配置 https / 同一域名内网解析。",
       "netModeChangeButtonShow": "网络环境切换组件",
       "publicVisitModeShow": "公开模式允许显示",
       "resetAllStyleWarnText": "确定要重置所有样式吗？",

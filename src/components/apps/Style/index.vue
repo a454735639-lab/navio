@@ -108,7 +108,8 @@ function resetPanelConfig() {
 
 // 开启自动识别网络将隐藏手动切换按钮
 function handleNetModeChangeAutoChange(value: boolean) {
-  panelState.panelConfig.netModeChangeButtonShow = !value
+  // 保留手动切换按钮，https 场景需要它兜底
+  panelState.panelConfig.netModeChangeButtonShow = true
   // 旧版本默认 100/200ms，在 Wi-Fi 下极易误判成外网；开启自动时给一个更稳的下限
   if (value && (panelState.panelConfig.netModeChangeAutoMaxPingMs ?? 0) < 300)
     panelState.panelConfig.netModeChangeAutoMaxPingMs = 600
@@ -333,6 +334,10 @@ function handleNetModeChangeAutoMaxPingMsChange(value: number) {
             </div>
           </STip>
         </span>
+      </div>
+
+      <div v-if="panelState.panelConfig.netModeChangeAuto" class="text-xs opacity-60 mt-1 leading-4">
+        {{ $t('apps.baseSettings.netModeChangeAutoHttpsTip') }}
       </div>
 
       <div v-if="panelState.panelConfig.netModeChangeAuto" class="flex items-center mt-[5px]">

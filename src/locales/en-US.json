@@ -90,6 +90,7 @@
       "netModeChangeAuto": "Automatic selection",
       "netModeChangeAutoMaxPingMs": "Connectivity test delay time",
       "netModeChangeAutoTip": "When the card is set with an [LAN address], the [LAN address] will be prioritized for connectivity testing. If the [LAN address] fails to test within the set delay time, the [Default address] will be used.",
+      "netModeChangeAutoHttpsTip": "When the panel is served over https, browsers block probing http LAN URLs. Open the panel via http://LAN-IP:3002 on your local network, or serve your LAN URLs over https (or use split-horizon DNS).",
       "netModeChangeButtonShow": "Network environment switching component",
       "publicVisitModeShow": "Allow public mode display",
       "resetAllStyleWarnText": "Are you sure you want to reset all styles?",

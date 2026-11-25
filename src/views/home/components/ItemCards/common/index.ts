@@ -13,6 +13,11 @@ const TIMEOUT_MAX = 3000
 
 let mixedContentWarned = false
 
+/** 当前页面是否因 https→http 混合内容限制而无法探测内网 */
+export function isProbeBlocked(): boolean {
+  return window.location.protocol === 'https:'
+}
+
 function clampTimeout(v: number | undefined): number {
   const n = Number(v ?? 600)
   if (!Number.isFinite(n) || n <= 0)
@@ -105,7 +110,7 @@ export async function detectLanReachable(lanUrl: string, timeout?: number, force
   if (window.location.protocol === 'https:' && origin.startsWith('http://')) {
     if (!mixedContentWarned) {
       mixedContentWarned = true
-      console.warn('[network-mode] https 页面无法探测 http 内网地址，已跳过探测；如需内网直连，请给内网地址也配置 https。')
+      console.warn('[network-mode] https 页面无法探测 http 内网地址（浏览器混合内容限制）；将按当前手动选择的模式打开。')
     }
     return false
   }
@@ -183,9 +188,17 @@ export async function getItemUrl(itemInfo: Panel.ItemInfo, timeout?: number) {
 
   // 未命中才探测，且点击路径上的等待上限压到 500ms
   const wait = Math.min(clampTimeout(timeout), 500)
+  const hasMixedContent = window.location.protocol === 'https:' && (parseOrigin(itemInfo.lanUrl) || '').startsWith('http://')
+
   const ok = await detectLanReachable(itemInfo.lanUrl, wait)
-  syncPanelMode(ok)
-  return (ok ? itemInfo.lanUrl : itemInfo.url) as string
+  // https 页面无法探测 http 内网时，不强行判定为外网，尊重手动切换结果
+  if (!hasMixedContent)
+    syncPanelMode(ok)
+
+  const useLan = hasMixedContent
+    ? panelState.networkMode === PanelStateNetworkModeEnum.lan
+    : ok
+  return (useLan ? itemInfo.lanUrl : itemInfo.url) as string
 }
 
 /**
