@@ -253,3 +253,16 @@ export async function getItemUrl(itemInfo: Panel.ItemInfo, timeout?: number) {
   syncPanelMode(false)
   return fallbackWan || wanList[0] || ''
 }
+
+/**
+ * 预热：页面加载 / 网络事件后把所有候选地址探一遍，点击时直接命中缓存。
+ */
+export async function warmupNetworkMode(urls: string[], timeout?: number) {
+  if (!panelState.panelConfig.netModeChangeAuto)
+    return
+  const origins = [...new Set(urls.flatMap(u => splitLanUrls(u)).map(u => parseOrigin(u)).filter((v): v is string => !!v))].slice(0, 12)
+  if (origins.length === 0)
+    return
+  const results = await Promise.all(origins.map(o => detectLanReachable(o, timeout, true).catch(() => false)))
+  syncPanelMode(results.some(Boolean))
+}
