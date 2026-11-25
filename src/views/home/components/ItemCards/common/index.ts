@@ -52,18 +52,39 @@ function parseOrigin(url: string): string | null {
  * 用 no-cors GET：只要拿到响应（哪怕 404/403）就视为可达；网络错误、DNS 失败、超时才失败。
  * 不用 HEAD：部分网关/反代对 HEAD 直接断开，会误判成不可达。
  */
-export function probeOrigin(origin: string, timeout: number): Promise<number> {
+async function probeOnce(url: string, timeout: number): Promise<number> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeout)
   const started = performance.now()
-  return fetch(`${origin}/favicon.ico?_=${Date.now()}`, {
-    method: 'GET',
-    mode: 'no-cors',
-    cache: 'no-store',
-    signal: controller.signal,
-  })
-    .then(() => performance.now() - started)
-    .finally(() => clearTimeout(timer))
+  try {
+    await fetch(url, {
+      method: 'GET',
+      mode: 'no-cors',
+      cache: 'no-store',
+      signal: controller.signal,
+    })
+    return performance.now() - started
+  }
+  finally {
+    clearTimeout(timer)
+  }
+}
+
+/**
+ * 探测 origin 是否可达：先探根路径（多数服务响应更快），失败再探 favicon。
+ * 两次共用一个超时预算，避免总耗时翻倍。
+ */
+export async function probeOrigin(origin: string, timeout: number): Promise<number> {
+  const started = performance.now()
+  try {
+    return await probeOnce(`${origin}/?_=${Date.now()}`, timeout)
+  }
+  catch (e) {
+    const left = timeout - (performance.now() - started)
+    if (left < 80)
+      throw e
+    return await probeOnce(`${origin}/favicon.ico?_=${Date.now()}`, left)
+  }
 }
 
 /** 清空缓存（网络切换、页面回到前台时调用） */
@@ -150,18 +171,30 @@ export async function getItemUrl(itemInfo: Panel.ItemInfo, timeout?: number) {
     return itemInfo.lanUrl
   }
 
-  const ok = await detectLanReachable(itemInfo.lanUrl, timeout)
+  // 缓存命中就直接用，点击零等待
+  const origin = parseOrigin(itemInfo.lanUrl)
+  if (origin) {
+    const cached = probeCache.get(origin)
+    if (cached && Date.now() - cached.at < CACHE_TTL) {
+      syncPanelMode(cached.ok)
+      return (cached.ok ? itemInfo.lanUrl : itemInfo.url) as string
+    }
+  }
+
+  // 未命中才探测，且点击路径上的等待上限压到 500ms
+  const wait = Math.min(clampTimeout(timeout), 500)
+  const ok = await detectLanReachable(itemInfo.lanUrl, wait)
   syncPanelMode(ok)
   return (ok ? itemInfo.lanUrl : itemInfo.url) as string
 }
 
 /**
- * 预热：页面加载后先把内网可达性探出来，点击卡片时直接命中缓存，不再等待。
+ * 预热：页面加载 / 网络事件后把所有内网 origin 探一遍，点击时直接命中缓存。
  */
 export async function warmupNetworkMode(lanUrls: string[], timeout?: number) {
   if (!panelState.panelConfig.netModeChangeAuto)
     return
-  const origins = [...new Set(lanUrls.map(u => parseOrigin(u)).filter((v): v is string => !!v))].slice(0, 3)
+  const origins = [...new Set(lanUrls.map(u => parseOrigin(u)).filter((v): v is string => !!v))].slice(0, 12)
   if (origins.length === 0)
     return
   const results = await Promise.all(origins.map(o => detectLanReachable(o, timeout, true).catch(() => false)))

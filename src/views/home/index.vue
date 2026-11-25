@@ -268,6 +268,8 @@ function handleVisibilityChange() {
 }
 
 // 网络状态变化 / 页面回到前台时，清缓存并重新判定
+let networkTimer: ReturnType<typeof setInterval> | undefined
+
 function handleNetworkChange() {
   clearNetworkCache()
   warmupNetworkMode(collectLanUrls(items.value), panelState.panelConfig.netModeChangeAutoMaxPingMs)
@@ -292,6 +294,12 @@ onMounted(async () => {
   // 设置标题
   if (panelState.panelConfig.logoText)
     setTitle(panelState.panelConfig.logoText)
+
+  // 后台静默刷新：页面可见时每 30s 复探，网络切换后 30s 内必纠正
+  networkTimer = setInterval(() => {
+    if (document.visibilityState === 'visible')
+      handleNetworkChange()
+  }, 30_000)
 
   // 监听触发更新列表
   triggerUpdateItemDatas.onTriggered(getList)
@@ -351,6 +359,8 @@ function toggleEditPanel(item: Panel.ItemInfo | null, groupId?: number) {
   editItemInfoShow.value = true
 }
 onUnmounted(() => {
+  if (networkTimer)
+    clearInterval(networkTimer)
   window.removeEventListener('online', handleNetworkChange)
   window.removeEventListener('offline', handleNetworkChange)
   document.removeEventListener('visibilitychange', handleVisibilityChange)

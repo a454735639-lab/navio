@@ -30,8 +30,12 @@ export const usePanelState = defineStore('panel', {
     // 获取云端（搭建的服务器）的面板配置
     async updatePanelConfigByCloud() {
       await getUserConfig<Panel.userConfig>().then((res) => {
-        if (res.code === 0)
+        if (res.code === 0) {
           this.panelConfig = { ...defaultStatePanelConfig(), ...res.data.panel }
+          // 旧版本默认 100/200ms，探测极易误判；升级后自动抬到一个可用值
+          if (this.panelConfig.netModeChangeAuto && (this.panelConfig.netModeChangeAutoMaxPingMs ?? 0) < 300)
+            this.panelConfig.netModeChangeAutoMaxPingMs = 600
+        }
         else
           this.resetPanelConfig() // 重置恢复默认
         this.recordState()
