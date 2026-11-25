@@ -42,7 +42,7 @@ function clampTimeout(v: number | undefined): number {
 
 /** 地址字段支持写多个，逗号/空格分隔，按顺序探测（内网、默认地址均适用） */
 export function splitLanUrls(raw: string | undefined): string[] {
-  return (raw || '').split(/[,\s]+/).map(v => v.trim()).filter(Boolean)
+  return (raw || '').split(/[,\uFF0C;\uFF1B\u3001\s]+/).map(v => v.trim()).filter(Boolean)
 }
 
 /** 是否是 Tailscale 入口（MagicDNS 域名或 100.64.0.0/10 CGNAT） */
