@@ -78,6 +78,22 @@ var state = struct {
 	port     int
 }{}
 
+var renewOnce sync.Once
+
+func startRenewLoop(p CertProvider) {
+	renewOnce.Do(func() {
+		go func() {
+			ticker := time.NewTicker(12 * time.Hour)
+			defer ticker.Stop()
+			for range ticker.C {
+				if _, _, err := p.Ensure(); err != nil {
+					global.Logger.Warnf("[probe] acme renew check failed: %v", err)
+				}
+			}
+		}()
+	})
+}
+
 // Apply 热应用配置：端口/开关变化时重建监听；仅证书路径变化时更新文件路径（mtime 热加载）。
 func Apply(cfg Config) {
 	state.mu.Lock()
@@ -104,10 +120,20 @@ func Apply(cfg Config) {
 		global.Logger.Warnf("[probe] provider init failed: %v", err)
 		return
 	}
-	certFile, keyFile, err := provider.Ensure()
-	if err != nil {
-		global.Logger.Warnf("[probe] certificate unavailable: %v", err)
-		return
+
+	certFile, keyFile := cfg.CertPath, cfg.KeyPath
+	if cfg.Provider == ProviderACME {
+		// ACME 签发是长任务：异步执行，先起监听（证书就绪后按 mtime 自动加载）
+		go func(p CertProvider) {
+			if _, _, err := p.Ensure(); err != nil {
+				global.Logger.Warnf("[probe] acme ensure failed: %v", err)
+			}
+		}(provider)
+	} else {
+		if certFile, keyFile, err = provider.Ensure(); err != nil {
+			global.Logger.Warnf("[probe] certificate unavailable: %v", err)
+			return
+		}
 	}
 
 	// 端口未变且已在运行：只更新证书路径，不重启监听
@@ -128,6 +154,11 @@ func Apply(cfg Config) {
 	state.srv = srv
 	state.reloader = reloader
 	state.port = cfg.Port
+
+	// ACME：后台巡检续期（每 12 小时判断一次，剩余 <30 天时自动续）
+	if cfg.Provider == ProviderACME {
+		startRenewLoop(provider)
+	}
 
 	go func() {
 		defer func() {

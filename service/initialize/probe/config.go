@@ -24,6 +24,13 @@ type Config struct {
 	Provider string `json:"provider"`
 	CertPath string `json:"certPath"`
 	KeyPath  string `json:"keyPath"`
+
+	// ACME（provider=acme）
+	ACMEEmail   string   `json:"acmeEmail,omitempty"`
+	ACMEDomains []string `json:"acmeDomains,omitempty"`
+	DNSProvider string   `json:"dnsProvider,omitempty"`
+	DNSTokenEnc string   `json:"dnsTokenEnc,omitempty"` // 加密后的 Token，接口返回前会清空
+	Staging     bool     `json:"staging,omitempty"`
 }
 
 func DefaultConfig() Config {
@@ -70,6 +77,17 @@ func normalize(cfg Config) Config {
 	if cfg.Provider == "" {
 		cfg.Provider = ProviderPath
 	}
+	if cfg.Provider == ProviderACME {
+		if cfg.CertPath == "" {
+			cfg.CertPath = "./conf/probe/acme/fullchain.pem"
+		}
+		if cfg.KeyPath == "" {
+			cfg.KeyPath = "./conf/probe/acme/key.pem"
+		}
+		for i := range cfg.ACMEDomains {
+			cfg.ACMEDomains[i] = strings.TrimSpace(cfg.ACMEDomains[i])
+		}
+	}
 	cfg.Provider = strings.ToLower(strings.TrimSpace(cfg.Provider))
 	cfg.CertPath = strings.TrimSpace(cfg.CertPath)
 	cfg.KeyPath = strings.TrimSpace(cfg.KeyPath)
@@ -92,7 +110,18 @@ func validate(cfg Config) error {
 			return fmt.Errorf("certificate invalid: %w", err)
 		}
 	case ProviderACME:
-		return fmt.Errorf("acme provider is not implemented yet")
+		if strings.TrimSpace(cfg.ACMEEmail) == "" {
+			return fmt.Errorf("acmeEmail is required")
+		}
+		if len(cfg.ACMEDomains) == 0 {
+			return fmt.Errorf("acmeDomains is required")
+		}
+		if strings.TrimSpace(cfg.DNSProvider) == "" {
+			return fmt.Errorf("dnsProvider is required")
+		}
+		if cfg.DNSTokenEnc == "" {
+			return fmt.Errorf("dns token is required")
+		}
 	default:
 		return fmt.Errorf("unknown provider: %s", cfg.Provider)
 	}

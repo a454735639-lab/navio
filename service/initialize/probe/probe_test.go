@@ -88,3 +88,42 @@ func TestFileProviderMissingFile(t *testing.T) {
 		t.Fatal("expected error for missing file")
 	}
 }
+
+func TestSecretRoundTrip(t *testing.T) {
+	old := secretPath
+	secretPath = filepath.Join(t.TempDir(), ".secret")
+	defer func() { secretPath = old }()
+
+	// 纯函数部分：加解密往返（依赖 SystemSetting 的用例放到集成环境）
+	enc, err := EncryptSecret("cf-token-123")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if enc == "" {
+		t.Fatal("empty ciphertext")
+	}
+	dec, err := DecryptSecret(enc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if dec != "cf-token-123" {
+		t.Fatalf("unexpected plaintext: %s", dec)
+	}
+	if _, err := DecryptSecret("bad"); err == nil {
+		t.Fatal("expected error for bad payload")
+	}
+}
+
+func TestValidateACME(t *testing.T) {
+	cfg := Config{Enabled: true, Port: 8443, Provider: ProviderACME}
+	if err := validate(cfg); err == nil {
+		t.Fatal("expected error for missing acme fields")
+	}
+	cfg.ACMEEmail = "a@b.c"
+	cfg.ACMEDomains = []string{"probe.example.com"}
+	cfg.DNSProvider = "cloudflare"
+	cfg.DNSTokenEnc = "enc"
+	if err := validate(cfg); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}

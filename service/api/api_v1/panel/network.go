@@ -13,6 +13,8 @@ type NetworkApi struct{}
 // GetProbeConfig 读取探针配置（管理员）
 func (a *NetworkApi) GetProbeConfig(c *gin.Context) {
 	cfg := probe.LoadConfig()
+	hasToken := cfg.DNSTokenEnc != ""
+	cfg.DNSTokenEnc = "" // 永不回传
 	status := map[string]any{}
 	if p, err := probe.NewProvider(cfg); err == nil {
 		if st, err := p.Status(); err == nil {
@@ -27,19 +29,37 @@ func (a *NetworkApi) GetProbeConfig(c *gin.Context) {
 		}
 	}
 	apiReturn.SuccessData(c, gin.H{
-		"config": cfg,
-		"cert":   status,
+		"config":   cfg,
+		"hasToken": hasToken,
+		"cert":     status,
 	})
 }
 
 // SaveProbeConfig 保存探针配置（管理员），保存后证书按 mtime 热加载
+type saveProbeReq struct {
+		probe.Config
+	DNSToken string `json:"dnsToken"`
+}
+
 func (a *NetworkApi) SaveProbeConfig(c *gin.Context) {
-	req := probe.Config{}
+	req := saveProbeReq{}
 	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
 		apiReturn.ErrorParamFomat(c, err.Error())
 		return
 	}
-	if err := probe.SaveConfig(req); err != nil {
+	cfg := req.Config
+	if req.DNSToken != "" {
+		enc, err := probe.EncryptSecret(req.DNSToken)
+		if err != nil {
+			apiReturn.Error(c, err.Error())
+			return
+		}
+		cfg.DNSTokenEnc = enc
+	} else {
+		// 未填 Token 时保留原有加密值
+		cfg.DNSTokenEnc = probe.LoadConfig().DNSTokenEnc
+	}
+	if err := probe.SaveConfig(cfg); err != nil {
 		apiReturn.Error(c, err.Error())
 		return
 	}

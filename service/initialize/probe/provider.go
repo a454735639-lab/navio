@@ -35,7 +35,7 @@ func NewProvider(cfg Config) (CertProvider, error) {
 	case ProviderUpload:
 		return &fileProvider{name: ProviderUpload, cert: cfg.CertPath, key: cfg.KeyPath}, nil
 	case ProviderACME:
-		return nil, fmt.Errorf("acme provider is not implemented yet")
+		return &acmeProvider{cfg: cfg}, nil
 	default:
 		return nil, fmt.Errorf("unknown provider: %s", cfg.Provider)
 	}
