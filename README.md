@@ -19,9 +19,13 @@ so cards automatically pick the fastest LAN / Tailscale / WAN address.
 
 ## 截图 / Screenshots
 
+| 登录 / Login | 首页（含网络延迟）/ Home |
+|---|---|
+| ![login](docs/screenshots/login.jpg) | ![home](docs/screenshots/home-latency.jpg) |
+
 | 首页 / Home | 系统应用 / System apps |
 |---|---|
-| ![home](docs/screenshots/home.jpg) | ![apps](docs/screenshots/apps.jpg) |
+| ![home2](docs/screenshots/home.jpg) | ![apps](docs/screenshots/apps.jpg) |
 
 ## 快速开始 / Quick start
 
