@@ -10,7 +10,7 @@ import { getList as getGroupList } from '@/api/panel/itemIconGroup'
 import { apiRespErrMsg, setTitle, updateLocalUserInfo } from '@/utils/cmn'
 import { useTriggerUpdateItemData } from '@/hooks/useTriggerUpdateItemData'
 import { getSiteStting } from '@/api/openness'
-import { clearNetworkCache, warmupNetworkMode } from './components/ItemCards/common'
+import { clearNetworkCache, getNetworkStatus, warmupNetworkMode } from './components/ItemCards/common'
 import { defaultSetting } from '@/store/modules/app/helper'
 
 import { useAccountManagerStore, useAppStore, useAuthStore, usePanelState } from '@/store'
@@ -269,6 +269,19 @@ function handleVisibilityChange() {
 
 // 网络状态变化 / 页面回到前台时，清缓存并重新判定
 let networkTimer: ReturnType<typeof setInterval> | undefined
+let statusTimer: ReturnType<typeof setInterval> | undefined
+
+const netStatus = ref(getNetworkStatus())
+
+function refreshNetStatus() {
+  netStatus.value = getNetworkStatus()
+}
+
+function labelNetwork() {
+  if (netStatus.value.mode === 'lan')
+    return netStatus.value.ms !== null ? `LAN · ${netStatus.value.ms}ms` : 'LAN'
+  return 'WAN'
+}
 
 function handleNetworkChange() {
   clearNetworkCache()
@@ -297,9 +310,13 @@ onMounted(async () => {
 
   // 后台静默刷新：页面可见时每 30s 复探，网络切换后 30s 内必纠正
   networkTimer = setInterval(() => {
-    if (document.visibilityState === 'visible')
+    if (document.visibilityState === 'visible') {
       handleNetworkChange()
+      refreshNetStatus()
+    }
   }, 30_000)
+
+  statusTimer = setInterval(refreshNetStatus, 2_000)
 
   // 监听触发更新列表
   triggerUpdateItemDatas.onTriggered(getList)
@@ -361,6 +378,8 @@ function toggleEditPanel(item: Panel.ItemInfo | null, groupId?: number) {
 onUnmounted(() => {
   if (networkTimer)
     clearInterval(networkTimer)
+  if (statusTimer)
+    clearInterval(statusTimer)
   window.removeEventListener('online', handleNetworkChange)
   window.removeEventListener('offline', handleNetworkChange)
   document.removeEventListener('visibilitychange', handleVisibilityChange)
@@ -369,6 +388,14 @@ onUnmounted(() => {
 </script>
 
 <template>
+  <div v-if="panelState.panelConfig.netModeChangeAuto" class="fixed bottom-3 right-3 z-50">
+    <NButton size="tiny" round secondary :title="t('apps.baseSettings.netModeChangeAuto')" @click="handleNetworkChange(); refreshNetStatus()">
+      <span :class="netStatus.mode === 'lan' ? 'text-green-500' : 'text-gray-400'">
+        {{ labelNetwork() }}
+      </span>
+    </NButton>
+  </div>
+
   <div class="w-full h-full sun-main">
     <div
       class="cover wallpaper" :style="{

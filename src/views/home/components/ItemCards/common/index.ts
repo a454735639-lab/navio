@@ -13,6 +13,17 @@ const TIMEOUT_MAX = 3000
 
 let mixedContentWarned = false
 
+// 最近一次探测结果，供首页角标展示
+let lastProbe: { origin: string, ok: boolean, ms: number | null, at: number } | null = null
+
+export function getNetworkStatus() {
+  return {
+    mode: panelState.networkMode === PanelStateNetworkModeEnum.lan ? 'lan' : 'wan',
+    ms: lastProbe?.ms ?? null,
+    at: lastProbe?.at ?? 0,
+  }
+}
+
 /** 当前页面是否因 https→http 混合内容限制而无法探测内网 */
 export function isProbeBlocked(): boolean {
   return window.location.protocol === 'https:'
@@ -120,12 +131,14 @@ export async function detectLanReachable(lanUrl: string, timeout?: number, force
     return cached.ok
 
   try {
-    await probeOrigin(origin, clampTimeout(timeout))
+    const ms = await probeOrigin(origin, clampTimeout(timeout))
     probeCache.set(origin, { ok: true, at: Date.now() })
+    lastProbe = { origin, ok: true, ms: Math.round(ms), at: Date.now() }
     return true
   }
   catch {
     probeCache.set(origin, { ok: false, at: Date.now() })
+    lastProbe = { origin, ok: false, ms: null, at: Date.now() }
     return false
   }
 }
