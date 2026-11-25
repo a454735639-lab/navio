@@ -6,6 +6,7 @@ import (
 	"sun-panel/api/api_v1/common/apiData/panelApiStructs"
 	"sun-panel/api/api_v1/common/apiReturn"
 	"sun-panel/api/api_v1/common/base"
+	"sun-panel/api/api_v1/middleware"
 	"sun-panel/biz"
 	"sun-panel/global"
 	"sun-panel/lib/cmn"
@@ -66,6 +67,7 @@ func (l LoginApi) Login(c *gin.Context) {
 	if info, err = mUser.GetUserInfoByUsernameAndPassword(param.Username, cmn.PasswordEncryption(param.Password)); err != nil {
 		// 未找到记录 账号或密码错误
 		if err == gorm.ErrRecordNotFound {
+			middleware.RecordLoginFailure(c.ClientIP())
 			apiReturn.ErrorByCode(c, 1003)
 			return
 		} else {
@@ -81,6 +83,7 @@ func (l LoginApi) Login(c *gin.Context) {
 		apiReturn.ErrorByCode(c, 1004)
 		return
 	}
+	middleware.ResetLoginFailure(c.ClientIP())
 
 	bToken = info.Token
 	if info.Token == "" {

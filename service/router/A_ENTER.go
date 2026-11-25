@@ -17,6 +17,8 @@ import (
 	"sun-panel/router/panel"
 	"sun-panel/router/system"
 
+	"sun-panel/api/api_v1/middleware"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -57,6 +59,9 @@ func InitRouters() {
 }
 
 func InitRouter(router *gin.Engine) *gin.Engine {
+	// 全局安全响应头
+	router.Use(middleware.SecurityHeaders())
+
 	rootRouter := router.Group("/")
 	routerGroup := rootRouter.Group("api")
 
