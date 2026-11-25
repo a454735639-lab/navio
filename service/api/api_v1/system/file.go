@@ -99,6 +99,46 @@ func (a *FileApi) UploadImg(c *gin.Context) {
 	})
 }
 
+// UploadFile 通用文件上传（图片/文档/压缩包/音视频等）
+// 说明：显式屏蔽可直接在浏览器执行脚本的扩展名（html/js/svg 之外的脚本壳），避免上传后被当作页面执行。
+func (a *FileApi) UploadFile(c *gin.Context) {
+	agreeExts := []string{
+		// 图片
+		".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".ico", ".avif", ".heic", ".bmp",
+		// 文档
+		".pdf", ".txt", ".md", ".json", ".csv", ".xml", ".yml", ".yaml", ".log",
+		".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".odt", ".ods", ".odp", ".rtf",
+		// 压缩包
+		".zip", ".rar", ".7z", ".tar", ".gz", ".tgz", ".bz2", ".xz",
+		// 音视频
+		".mp3", ".wav", ".flac", ".aac", ".ogg", ".m4a", ".mp4", ".webm", ".mkv", ".mov", ".avi",
+		// 其他常用
+		".apk", ".ipa", ".dmg", ".iso", ".torrent", ".ttf", ".otf", ".woff", ".woff2",
+	}
+
+	fileInfo, err := base.UploadFileAndSave(c, agreeExts, 500<<20)
+	if err != nil {
+		switch err {
+		case base.ErrUploadExtensionNameNotAllowed:
+			apiReturn.ErrorByCode(c, apiReturn.ErrCodeUnsupportedFileFormat)
+		case base.ErrUploadExceedMaxSize:
+			apiReturn.ErrorCode(c, 1302, "file too large", nil)
+		default:
+			global.Logger.Error(err.Error())
+			apiReturn.ErrorByCode(c, apiReturn.ErrCodeUploadFailed)
+		}
+		return
+	}
+
+	apiReturn.SuccessData(c, gin.H{
+		"imageUrl": global.UPLOAD_ROUTE + fileInfo.Src,
+		"url":      global.UPLOAD_ROUTE + fileInfo.Src,
+		"fileName": fileInfo.FileName,
+		"ext":      fileInfo.Ext,
+		"size":     fileInfo.Size,
+	})
+}
+
 // 一直未使用有待测试
 func (a *FileApi) UploadFiles(c *gin.Context) {
 	userInfo, _ := base.GetCurrentUserInfo(c)
@@ -167,6 +207,8 @@ func (a *FileApi) GetList(c *gin.Context) {
 			"createTime": v.CreatedAt,
 			"updateTime": v.UpdatedAt,
 			"path":       v.Src,
+			"ext":        v.Ext,
+			"size":       v.Size,
 		})
 	}
 	apiReturn.SuccessListData(c, data, count)

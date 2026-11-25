@@ -18,7 +18,7 @@ const ms = useMessage()
 const dialog = useDialog()
 const panelStore = usePanelState()
 const authStore = useAuthStore()
-const fileUploadUrl = '/api/file/uploadImg'
+const fileUploadUrl = '/api/file/uploadFile'
 const loading = ref(false)
 const infoModalState = ref<InfoModalState>({
   show: false,
@@ -43,6 +43,40 @@ function handleUploadFinish({ event }: { event?: ProgressEvent }) {
     ms.error(t('common.uploadFail'))
   }
   getFileList()
+}
+
+const IMAGE_EXTS = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.ico', '.avif', '.heic', '.bmp']
+
+function isImageFile(item: File.Info) {
+  return IMAGE_EXTS.includes((item.ext || '').toLowerCase())
+}
+
+function extLabel(item: File.Info) {
+  return (item.ext || '').replace('.', '').toUpperCase() || 'FILE'
+}
+
+function formatSize(size?: number) {
+  if (!size || size <= 0)
+    return ''
+  const units = ['B', 'KB', 'MB', 'GB']
+  let v = size
+  let i = 0
+  while (v >= 1024 && i < units.length - 1) {
+    v /= 1024
+    i++
+  }
+  return `${v.toFixed(v >= 100 || i === 0 ? 0 : 1)} ${units[i]}`
+}
+
+function downloadFile(item: File.Info) {
+  const a = document.createElement('a')
+  a.href = item.src
+  a.download = item.fileName || ''
+  a.target = '_blank'
+  a.rel = 'noopener'
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
 }
 
 async function getFileList() {
@@ -123,7 +157,6 @@ onMounted(() => {
           name="imgfile"
           :headers="{ token: authStore.token || '' }"
           :data="{ type: 0 }"
-          accept=".png,.jpg,.jpeg,.gif,.webp,.svg,.ico,.avif,.heic"
           :show-file-list="false"
           multiple
           @finish="handleUploadFinish"
@@ -152,8 +185,11 @@ onMounted(() => {
               size="small" style="border-radius: 5px;" :bordered="true" hoverable
             >
               <template #cover>
-                <div class="img-card transparent-grid dark:brightness-75">
+                <div v-if="isImageFile(item)" class="img-card transparent-grid dark:brightness-75">
                   <NImage lazy style="object-fit: contain;height: 100%;" :src="item.src" />
+                </div>
+                <div v-else class="img-card file-card">
+                  <span class="ext-badge">{{ extLabel(item) }}</span>
                 </div>
               </template>
               <template #footer>
@@ -162,6 +198,9 @@ onMounted(() => {
                     {{ item.fileName }}
                   </NEllipsis>
                 </span>
+                <div v-if="formatSize(item.size)" class="text-[11px] opacity-60 mt-[2px]">
+                  {{ formatSize(item.size) }}
+                </div>
                 <div class="flex justify-center mt-[10px]">
                   <NButtonGroup>
                     <NButton size="tiny" tertiary style="cursor: pointer;" :title="$t('apps.uploadsFileManager.copyLink')" @click="copyImageUrl(item.src)">
@@ -174,9 +213,14 @@ onMounted(() => {
                         <SvgIcon icon="mdi-information-box-outline" />
                       </template>
                     </NButton>
-                    <NButton size="tiny" tertiary style="cursor: pointer;" :title="$t('apps.uploadsFileManager.setWallpaper')" @click="handleSetWallpaper(item.src)">
+                    <NButton v-if="isImageFile(item)" size="tiny" tertiary style="cursor: pointer;" :title="$t('apps.uploadsFileManager.setWallpaper')" @click="handleSetWallpaper(item.src)">
                       <template #icon>
                         <SvgIcon icon="lucide:wallpaper" />
+                      </template>
+                    </NButton>
+                    <NButton size="tiny" tertiary style="cursor: pointer;" :title="$t('common.download')" @click="downloadFile(item)">
+                      <template #icon>
+                        <SvgIcon icon="fa6-solid-file-export" />
                       </template>
                     </NButton>
                     <NButton size="tiny" tertiary type="error" style="cursor: pointer;" :title="$t('common.delete')" @click="handleDelete(item.id as number)">
@@ -232,6 +276,20 @@ onMounted(() => {
   justify-content: center;
   align-items: center;
   height: 80px;
+}
+
+.file-card {
+  background: rgba(127, 127, 127, 0.12);
+  border-radius: 6px;
+}
+
+.ext-badge {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(127, 127, 127, 0.2);
 }
 
 .img-group {

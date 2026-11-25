@@ -138,6 +138,7 @@ func UploadFileAndSave(c *gin.Context, agreeExtNames []string, maxSize int64) (f
 			Src:      pureFilePath,
 			Type:     fileType,
 			Ext:      fileExt,
+			Size:     f.Size,
 		}
 
 		err = global.Db.Create(&fileInfo).Error

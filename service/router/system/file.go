@@ -14,6 +14,7 @@ func InitFileRouter(router *gin.RouterGroup) {
 	private := router.Group("", middleware.LoginInterceptor)
 	{
 		private.POST("/file/uploadImg", FileApi.UploadImg)
+		private.POST("/file/uploadFile", FileApi.UploadFile)
 		// private.POST("/file/uploadFiles", FileApi.UploadFiles)
 
 		private.POST("/file/getList", FileApi.GetList)

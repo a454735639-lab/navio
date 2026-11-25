@@ -7,6 +7,7 @@ type File struct {
 	FileName        string `json:"fileName" gorm:"varchar(255)"`         // 文件名
 	Type            int    `gorm:"tinyint(1)" json:"type"`               // 文件类型 1.壁纸 2.卡片图标 3.图库图片
 	Ext             string `gorm:"varchar(255)" json:"ext"`              // 扩展名
+	Size            int64  `json:"size"`                              // 文件大小（字节）
 	IsPublicGallery bool   `json:"isPublicGallery" gorm:"default:false"` // 是否公开到公共图库
 }
 
