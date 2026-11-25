@@ -193,8 +193,12 @@ func encodePrivateKey(key any) ([]byte, error) {
 
 func writeFileAtomic(path string, data []byte, perm os.FileMode) error {
 	tmp := path + ".tmp"
-	if err := os.WriteFile(tmp, data, perm); err != nil {
+	if err := os.WriteFile(tmp, data, 0o600); err != nil {
 		return err
 	}
-	return os.Rename(tmp, path)
+	if err := os.Rename(tmp, path); err != nil {
+		return err
+	}
+	// 挂载卷可能带宽松权限，这里强制收敛
+	return os.Chmod(path, perm)
 }
