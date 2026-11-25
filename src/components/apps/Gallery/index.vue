@@ -1,21 +1,43 @@
 <script setup lang="ts">
-import { NAlert, NButton, NImage, NSpin, useDialog, useMessage } from 'naive-ui'
+import { NAlert, NButton, NImage, NSpin, NUpload, useDialog, useMessage } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 import { getUserImagesList, updateGalleryFileType } from '@/api/panel/gallery'
 import { deletes as deleteFiles } from '@/api/system/file'
 import { RoundCardModal, SvgIcon } from '@/components/common'
 import { t } from '@/locales'
 import { copyToClipboard, timeFormat } from '@/utils/cmn'
+import { useAuthStore } from '@/store'
 
 const imageList = ref<File.Info[]>([])
 const loading = ref(false)
 const ms = useMessage()
+const authStore = useAuthStore()
+const galleryUploadUrl = '/api/file/uploadImg'
 const dialog = useDialog()
 const infoModalState = ref<{ show: boolean, title: string, fileInfo: File.Info | null }>({
   show: false,
   title: '',
   fileInfo: null,
 })
+
+function handleUploadFinish({ event }: { event?: ProgressEvent }) {
+  const target = (event as any)?.target
+  if (!target?.response) {
+    ms.error(t('common.uploadFail'))
+    return
+  }
+  try {
+    const res = JSON.parse(target.response)
+    if (res.code === 0)
+      ms.success(t('common.success'))
+    else
+      ms.error(res.msg || t('common.uploadFail'))
+  }
+  catch {
+    ms.error(t('common.uploadFail'))
+  }
+  getFileList()
+}
 
 function imageUrl(src: string) {
   return `/uploads${src}`
@@ -80,6 +102,26 @@ onMounted(() => {
     <NAlert type="info" :bordered="false">
       {{ $t('apps.uploadsFileManager.alertText') }}
     </NAlert>
+
+    <div class="flex items-center gap-2 m-2">
+      <NUpload
+        :action="galleryUploadUrl"
+        name="imgfile"
+        :headers="{ token: authStore.token || '' }"
+        :data="{ type: 3 }"
+        accept=".png,.jpg,.jpeg,.gif,.webp,.svg,.ico,.avif,.heic"
+        :show-file-list="false"
+        multiple
+        @finish="handleUploadFinish"
+      >
+        <NButton type="primary" size="small">
+          <template #icon>
+            <SvgIcon icon="tabler-file-upload" />
+          </template>
+          {{ $t('apps.gallery.upload') }}
+        </NButton>
+      </NUpload>
+    </div>
 
     <NSpin :show="loading">
       <div v-if="imageList.length === 0 && !loading" class="flex justify-center items-center h-[60vh]">

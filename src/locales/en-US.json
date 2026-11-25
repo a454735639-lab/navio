@@ -52,6 +52,7 @@
       "checkFailed": "Failed to check for updates, please click here to check on the official website",
       "checkUpdate": "Check for new version",
       "runningInfo": "Running info",
+      "intro": "Sun-Panel OSS local edition: a self-hosted navigation panel with gallery, public gallery, backup & migration and multi-account support. PRO limits are removed in this build, all features work locally.",
       "checkUploadTip1": "1. If the deployment machine keeps failing to check when connected to the Internet, please check whether the time of the deployment machine is the standard time of any time zone.",
       "checkUploadTip2": "2. Only supports checking whether there is a new version, and does not support online updates. \nPlease be sure to check the update log and backup data before updating!",
       "checkUploadTip3": "3. If you want to experience the beta version, please check it again",
