@@ -109,6 +109,9 @@ function resetPanelConfig() {
 // 开启自动识别网络将隐藏手动切换按钮
 function handleNetModeChangeAutoChange(value: boolean) {
   panelState.panelConfig.netModeChangeButtonShow = !value
+  // 旧版本默认 100/200ms，在 Wi-Fi 下极易误判成外网；开启自动时给一个更稳的下限
+  if (value && (panelState.panelConfig.netModeChangeAutoMaxPingMs ?? 0) < 300)
+    panelState.panelConfig.netModeChangeAutoMaxPingMs = 600
 }
 
 function handleNetModeChangeAutoMaxPingMsChange(value: number) {

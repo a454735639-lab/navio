@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { VueDraggable } from 'vue-draggable-plus'
 import { NBackTop, NButton, useDialog, useMessage } from 'naive-ui'
-import { nextTick, onMounted, ref } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { AppStarter, EditItem, ItemCards } from './components'
 import { AccountSwitcher, Clock, SearchBox, SystemMonitor } from '@/components/deskModule'
 import { Loading, SvgIcon } from '@/components/common'
@@ -10,6 +10,7 @@ import { getList as getGroupList } from '@/api/panel/itemIconGroup'
 import { apiRespErrMsg, setTitle, updateLocalUserInfo } from '@/utils/cmn'
 import { useTriggerUpdateItemData } from '@/hooks/useTriggerUpdateItemData'
 import { getSiteStting } from '@/api/openness'
+import { clearNetworkCache, warmupNetworkMode } from './components/ItemCards/common'
 import { defaultSetting } from '@/store/modules/app/helper'
 
 import { useAccountManagerStore, useAppStore, useAuthStore, usePanelState } from '@/store'
@@ -83,6 +84,9 @@ async function getList() {
   // 获取组数据
   getGroupList<Common.ListResponse<ItemGroup[]>>().then(({ data }) => {
     items.value = data.list
+
+    // 内外网自动识别：先把内网可达性探出来，点击卡片时直接命中缓存
+    warmupNetworkMode(collectLanUrls(data.list), panelState.panelConfig.netModeChangeAutoMaxPingMs)
 
     const getAllGroupList = async () => {
       for (let i = 0; i < data.list.length; i++) {
@@ -245,6 +249,30 @@ function runFooterJSCode() {
   hasRunFooterJS = true
 }
 
+
+function collectLanUrls(list: ItemGroup[] | undefined): string[] {
+  const out: string[] = []
+  ;(list || []).forEach((g) => {
+    ;(g.items || []).forEach((it: Panel.ItemInfo) => {
+      if (it && it.lanUrl)
+        out.push(it.lanUrl)
+    })
+  })
+  return out
+}
+
+
+function handleVisibilityChange() {
+  if (document.visibilityState === 'visible')
+    handleNetworkChange()
+}
+
+// 网络状态变化 / 页面回到前台时，清缓存并重新判定
+function handleNetworkChange() {
+  clearNetworkCache()
+  warmupNetworkMode(collectLanUrls(items.value), panelState.panelConfig.netModeChangeAutoMaxPingMs)
+}
+
 onMounted(async () => {
   itemCardsLoading.value = true // 加载中
   // 获取全局配置
@@ -268,6 +296,11 @@ onMounted(async () => {
   // 监听触发更新列表
   triggerUpdateItemDatas.onTriggered(getList)
   runFooterJSCode()
+
+  // 内外网自动识别：网络恢复、页面回到前台时重新探测
+  window.addEventListener('online', handleNetworkChange)
+  window.addEventListener('offline', handleNetworkChange)
+  document.addEventListener('visibilitychange', handleVisibilityChange)
 })
 
 // 前端搜索过滤
@@ -317,6 +350,12 @@ function toggleEditPanel(item: Panel.ItemInfo | null, groupId?: number) {
   currentAddItenIconGroupId.value = groupId
   editItemInfoShow.value = true
 }
+onUnmounted(() => {
+  window.removeEventListener('online', handleNetworkChange)
+  window.removeEventListener('offline', handleNetworkChange)
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
+})
+
 </script>
 
 <template>
