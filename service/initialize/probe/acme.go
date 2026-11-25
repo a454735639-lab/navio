@@ -21,6 +21,24 @@ import (
 	"github.com/go-acme/lego/v4/providers/dns/cloudflare"
 )
 
+// propagationDelayProvider 在写入 TXT 后等待一段时间，避免 LE 立即查询拿不到记录
+type propagationDelayProvider struct {
+	provider *cloudflare.DNSProvider
+	delay    time.Duration
+}
+
+func (p *propagationDelayProvider) Present(domain, token, keyAuth string) error {
+	if err := p.provider.Present(domain, token, keyAuth); err != nil {
+		return err
+	}
+	time.Sleep(p.delay)
+	return nil
+}
+
+func (p *propagationDelayProvider) CleanUp(domain, token, keyAuth string) error {
+	return p.provider.CleanUp(domain, token, keyAuth)
+}
+
 // acmeUser 满足 lego 的 User 接口
 type acmeUser struct {
 	Email string
@@ -114,12 +132,15 @@ func (p *acmeProvider) issue(certFile, keyFile string) error {
 	if err != nil {
 		return err
 	}
+	// Cloudflare 记录写入后，等待其同步到公共解析，再让 LE 校验
+	delayed := &propagationDelayProvider{provider: dnsProvider, delay: 25 * time.Second}
+
 	opts := []dns01.ChallengeOption{
 		dns01.AddRecursiveNameservers([]string{"1.1.1.1:53", "8.8.8.8:53"}),
 		dns01.AddDNSTimeout(2 * time.Minute),
 		dns01.DisableCompletePropagationRequirement(),
 	}
-	if err := client.Challenge.SetDNS01Provider(dnsProvider, opts...); err != nil {
+	if err := client.Challenge.SetDNS01Provider(delayed, opts...); err != nil {
 		return err
 	}
 	if _, err := client.Registration.Register(registration.RegisterOptions{TermsOfServiceAgreed: true}); err != nil {
