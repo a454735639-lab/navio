@@ -12,6 +12,7 @@ import (
 	"sun-panel/initialize/database"
 	"sun-panel/initialize/lang"
 	"sun-panel/initialize/other"
+	"sun-panel/initialize/probe"
 	"sun-panel/initialize/redis"
 	"sun-panel/initialize/runlog"
 	"sun-panel/initialize/systemSettingCache"
@@ -44,6 +45,13 @@ func getDefaultConfig() map[string]map[string]string {
 			"source_path":      "./uploads",      // 存放文件的路径
 			"source_temp_path": "./runtime/temp", // 存放文件的缓存路径
 			"web_path":         "./web",
+		},
+
+		"probe": {
+			"enabled":   "false",
+			"port":      "8443",
+			"cert_path": "",
+			"key_path":  "",
 		},
 
 		// 此为隐藏配置
@@ -122,6 +130,9 @@ func InitApp() error {
 	// 注册与统计程序
 	biz.ProAuth = *biz.NewProAuth()
 	biz.ProAuth.Start()
+
+	// 可选的网络位置探针（TLS，默认关闭）
+	probe.Start()
 	return nil
 }
 

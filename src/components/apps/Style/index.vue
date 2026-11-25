@@ -340,6 +340,21 @@ function handleNetModeChangeAutoMaxPingMsChange(value: number) {
         {{ $t('apps.baseSettings.netModeChangeAutoHttpsTip') }}
       </div>
 
+      <div class="mt-[10px] text-xs text-slate-500 dark:text-slate-400">
+        {{ $t('apps.baseSettings.netProbeTitle') }}
+      </div>
+      <div class="flex items-center mt-[5px] gap-2">
+        <span class="shrink-0">{{ $t('apps.baseSettings.netProbeLanUrl') }}</span>
+        <NInput v-model:value="panelState.panelConfig.netProbeLanUrl" size="small" placeholder="https://lan-probe.example.com:8443/" clearable />
+      </div>
+      <div class="flex items-center mt-[5px] gap-2">
+        <span class="shrink-0">{{ $t('apps.baseSettings.netProbeTsUrl') }}</span>
+        <NInput v-model:value="panelState.panelConfig.netProbeTsUrl" size="small" placeholder="https://ts-probe.example.com:8443/" clearable />
+      </div>
+      <div class="text-xs opacity-60 mt-1 leading-4">
+        {{ $t('apps.baseSettings.netProbeTip') }}
+      </div>
+
       <div v-if="panelState.panelConfig.netModeChangeAuto" class="flex items-center mt-[5px]">
         <span class="mr-[10px]">{{ `${$t('apps.baseSettings.netModeChangeAutoMaxPingMs')} (ms)` }}</span>
         <NInputNumber
