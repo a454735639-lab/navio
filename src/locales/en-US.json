@@ -469,6 +469,7 @@
   },
   "panelHome": {
     "changeToLanModel": "Switch Sun-Panel to the internal network environment",
+    "useTailnet": "Use Tailscale (100.x) address",
     "changeToLanModelSuccess": "Already switched to intranet network environment",
     "changeToWanModel": "Switch Sun-Panel to the public network environment",
     "changeToWanModelSuccess": "Already switched to public network environment",

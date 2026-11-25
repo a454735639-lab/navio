@@ -615,12 +615,22 @@ onUnmounted(() => {
       </div>
 
       <div
-        v-if="panelState.networkMode === PanelStateNetworkModeEnum.wan && panelState.panelConfig.netModeChangeButtonShow"
+        v-if="panelState.networkMode !== PanelStateNetworkModeEnum.lan && panelState.panelConfig.netModeChangeButtonShow"
         class="float-btn flex items-center justify-center"
         :title="t('panelHome.changeToLanModel')"
         @click="handleChangeNetwork(PanelStateNetworkModeEnum.lan)"
       >
         <SvgIcon class="text-white font-xl float-btn-icon" icon="mdi:wan" />
+      </div>
+
+      <!-- Tailscale 模式：https 页面无法探测时，一键走 100.x 地址 -->
+      <div
+        v-if="panelState.networkMode !== PanelStateNetworkModeEnum.tailnet && panelState.panelConfig.netModeChangeButtonShow"
+        class="float-btn flex items-center justify-center text-[11px] font-bold text-white"
+        :title="t('panelHome.useTailnet')"
+        @click="handleChangeNetwork(PanelStateNetworkModeEnum.tailnet)"
+      >
+        TS
       </div>
 
       <!-- 账号管理器切换 -->

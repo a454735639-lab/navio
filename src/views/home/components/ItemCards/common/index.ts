@@ -209,6 +209,12 @@ export async function getItemUrl(itemInfo: Panel.ItemInfo, timeout?: number) {
   if (!panelState.panelConfig.netModeChangeAuto) {
     if (panelState.networkMode === PanelStateNetworkModeEnum.lan)
       return lanList[0] || wanList[0] || ''
+    if (panelState.networkMode === PanelStateNetworkModeEnum.tailnet) {
+      // Tailscale：优先 100.x / *.ts.net 的候选，找不到就用默认地址第一顺位
+      const all = [...wanList, ...lanList]
+      const tailnetUrl = all.find(u => /^https?:\/\/(100\.|.*\.ts\.net)/i.test(u))
+      return tailnetUrl || wanList[0] || lanList[0] || ''
+    }
     return wanList[0] || ''
   }
 

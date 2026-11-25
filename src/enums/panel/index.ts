@@ -3,6 +3,8 @@ export enum PanelStateNetworkModeEnum {
   'lan' = 0,
   // 互联网
   'wan' = 1,
+  // Tailscale / 远程内网（优先用 100.x 地址）
+  'tailnet' = 2,
 }
 
 export enum PanelPanelConfigStyleEnum {

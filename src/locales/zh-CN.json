@@ -469,6 +469,7 @@
   },
   "panelHome": {
     "changeToLanModel": "将 Sun-Panel 切换为内网环境",
+    "useTailnet": "使用 Tailscale(100.x) 地址",
     "changeToLanModelSuccess": "已经切换到内网环境",
     "changeToWanModel": "将 Sun-Panel 切换为公网环境",
     "changeToWanModelSuccess": "已经切换到公网环境",
