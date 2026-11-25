@@ -114,7 +114,7 @@
       "netProbeTitle": "Network location probes (optional)",
       "netProbeLanUrl": "LAN probe URL",
       "netProbeTsUrl": "Tailscale probe URL",
-      "netProbeTip": "Both must be https endpoints returning 204 (e.g. the panel itself on port 8443). When set, the panel can tell LAN / Tailscale / WAN even on an https page. Leave empty to disable.",
+      "netProbeTip": "Both must be https endpoints returning 204 (e.g. the panel itself on port 8443). With them set, the panel can tell LAN / Tailscale / WAN even on an https page. DNS needs two DNS-only A records: lan-probe.your.domain -> LAN IP, ts-probe.your.domain -> overlay IP.",
       "publicVisitModeShow": "Allow public mode display",
       "resetAllStyleWarnText": "Are you sure you want to reset all styles?",
       "resetWarnText": "Are you sure you want to reset all styles under this item?",

@@ -17,6 +17,12 @@ so cards automatically pick the fastest LAN / Tailscale / WAN address.
 - 证书：内置 ACME（DNS-01，当前支持 Cloudflare），自动续期，无需外部容器
 - Docker 单镜像部署
 
+## 截图 / Screenshots
+
+| 首页 / Home | 系统应用 / System apps |
+|---|---|
+| ![home](docs/screenshots/home.jpg) | ![apps](docs/screenshots/apps.jpg) |
+
 ## 快速开始 / Quick start
 
 ```yaml

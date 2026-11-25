@@ -114,7 +114,7 @@
       "netProbeTitle": "网络位置探针（可选）",
       "netProbeLanUrl": "LAN 探针地址",
       "netProbeTsUrl": "Tailscale 探针地址",
-      "netProbeTip": "两个地址都必须是返回 204 的 https 端点（例如面板自己的 8443）。填了之后，https 页面下也能判断「内网 / Tailscale / 外网」。留空则不启用。",
+      "netProbeTip": "两个地址都必须是返回 204 的 https 端点（例如面板自己的 8443）。填了之后，https 页面下也能判断「内网 / Tailscale / 外网」。DNS 侧需两条灰云 A 记录：lan-probe.你的域名 → 内网 IP，ts-probe.你的域名 → 组网 IP。",
       "publicVisitModeShow": "公开模式允许显示",
       "resetAllStyleWarnText": "确定要重置所有样式吗？",
       "resetWarnText": "确定要重置此项下的所有样式吗？",
