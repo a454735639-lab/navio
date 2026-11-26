@@ -169,7 +169,7 @@ onUnmounted(() => {
                     @click="handleClickApp(item)"
                   >
                     <div
-                      class="bg-white dark:bg-zinc-800 p-[10px] rounded-lg mb-[5px] font-bold cursor-pointer flex items-center hover:bg-slate-50 focus:bg-slate-50"
+                      class="app-menu-item p-[10px] rounded-lg mb-[3px] font-medium cursor-pointer flex items-center"
                     >
                       <div
                         class="flex items-center justify-center"
@@ -209,7 +209,18 @@ onUnmounted(() => {
 
 <style scoped>
 .text-shadow {
-  text-shadow: 0px 0px 5px gray;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* 侧栏菜单项：柔和半透明 hover / 选中，替代硬白底 */
+.app-menu-item {
+  color: var(--n-text-color);
+  transition: background-color 0.18s, transform 0.18s;
+  border: 1px solid transparent;
+}
+.app-menu-item:hover {
+  background: rgba(127, 140, 180, 0.14);
+  transform: translateX(2px);
 }
 </style>
 

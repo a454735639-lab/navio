@@ -474,8 +474,8 @@ onUnmounted(() => {
           <div
             v-for="(itemGroup, itemGroupIndex) in filterItems" :id="`item-group-${itemGroup.onlyName}`"
             :key="itemGroupIndex"
-            class="item-list mt-[40px]"
-            :class="`item-group-${itemGroup.onlyName} item-group-index-${itemGroupIndex} ${itemGroup.sortStatus ? (`border shadow-[0_0_30px_10px_rgba(0,0,0,0.3)]  p-[10px] rounded-2xl `) : ''}`"
+            class="item-list group-glass mt-[28px]"
+            :class="`item-group-${itemGroup.onlyName} item-group-index-${itemGroupIndex} ${itemGroup.sortStatus ? (`border shadow-[0_8px_30px_rgba(0,0,0,0.3)] p-[16px] rounded-2xl `) : ''}`"
             @mouseenter="handleSetHoverStatus(itemGroupIndex, true)"
             @mouseleave="handleSetHoverStatus(itemGroupIndex, false)"
           >
@@ -747,6 +747,23 @@ html {
   /* 距离屏幕顶部的距离 */
   /* bottom: 50px; */
   /* 距离屏幕左侧的距离 */
+}
+
+/* Pass visuals: 分组毛玻璃底板 —— 给每个分组一层可见但不抢眼的容器 */
+.group-glass {
+  position: relative;
+  padding: 18px 20px 20px;
+  margin-left: -20px;
+  margin-right: -20px;
+  border-radius: 18px;
+  background: rgba(24, 28, 40, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px) saturate(115%);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.16);
+}
+
+.item-list {
+  transition: background-color 0.25s, box-shadow 0.25s;
 }
 
 .icon-info-box {
