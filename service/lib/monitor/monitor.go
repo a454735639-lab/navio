@@ -132,6 +132,30 @@ func GetNetIOCountersInfo() ([]NetIOCountersInfo, error) {
 	return netInfo, err
 }
 
+// NetworkInfo 全局网络流量（聚合所有物理网卡，排除 lo 回环）
+type NetworkInfo struct {
+	RxBytes uint64 `json:"rxBytes"` // 累计接收字节
+	TxBytes uint64 `json:"txBytes"` // 累计发送字节
+}
+
+// GetNetworkInfo 获取全局网络流量累计值（排除回环接口）
+func GetNetworkInfo() (NetworkInfo, error) {
+	netStats, err := net.IOCounters(true)
+	if err != nil {
+		return NetworkInfo{}, err
+	}
+	var info NetworkInfo
+	for _, v := range netStats {
+		// 排除回环接口
+		if v.Name == "lo" || v.Name == "lo0" {
+			continue
+		}
+		info.RxBytes += v.BytesRecv
+		info.TxBytes += v.BytesSent
+	}
+	return info, nil
+}
+
 // func GetCountDiskInfo() {
 // 	// 获取所有磁盘的总使用情况
 // 	allUsage, err := disk.Usage("/")

@@ -380,6 +380,41 @@ async function getContainerStatus(info: Panel.ItemInfo, showLoading?: boolean) {
     loading.value = false
 }
 
+// 容器网速：后端 networkRX/TX 是累计 KB，前端保存上次值算差值
+const netSpeed = ref({ rx: 0, tx: 0 })
+let _lastRx = 0
+let _lastTx = 0
+let _lastTs = 0
+
+function formatNetSpeed(kbPerSec: number): string {
+  if (kbPerSec < 1)
+    return `${(kbPerSec * 1024).toFixed(0)} B/s`
+  if (kbPerSec < 1024)
+    return `${kbPerSec.toFixed(1)} KB/s`
+  return `${(kbPerSec / 1024).toFixed(1)} MB/s`
+}
+
+function calcNetSpeed(curRx: number, curTx: number, shotTime: string) {
+  const now = shotTime ? new Date(shotTime).getTime() : Date.now()
+  if (!now || _lastTs === 0 || curRx < _lastRx || curTx < _lastTx) {
+    _lastRx = curRx
+    _lastTx = curTx
+    _lastTs = now
+    netSpeed.value = { rx: 0, tx: 0 }
+    return
+  }
+  const dt = (now - _lastTs) / 1000
+  if (dt <= 0)
+    return
+  netSpeed.value = {
+    rx: (curRx - _lastRx) / dt,
+    tx: (curTx - _lastTx) / dt,
+  }
+  _lastRx = curRx
+  _lastTx = curTx
+  _lastTs = now
+}
+
 function updateStats(info: Panel.ItemInfo, data: Docker.Container.Stats) {
   if (!data) {
     return
@@ -406,6 +441,7 @@ function updateStats(info: Panel.ItemInfo, data: Docker.Container.Stats) {
   lastTime.value = data.shotTime || ''
 
   containerState.value = data
+  calcNetSpeed(data.networkRX || 0, data.networkTX || 0, data.shotTime || '')
   describeText.value = ''
 
   if (data.errorMessage !== '') {
@@ -634,6 +670,8 @@ onUnmounted(() => {
                   >
                     CPU:{{ roundNumberToOneDecimalPlaces(containerState.cpuPercent) }}%
                     RAM:{{ formatMemory(containerState.memory) }}
+                    <br>
+                    <span class="opacity-70">↑{{ formatNetSpeed(netSpeed.tx) }} ↓{{ formatNetSpeed(netSpeed.rx) }}</span>
                   </NEllipsis>
                   <NEllipsis
                     v-else-if="containerState.runStatus === DockerContainerInfoState.restarting"

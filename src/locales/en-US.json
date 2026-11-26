@@ -429,7 +429,11 @@
       "progressRailColor": "Secondary color",
       "systemState": "System status",
       "total": "Total",
-      "used": "Used"
+      "used": "Used",
+      "upload": "Upload",
+      "download": "Download",
+      "totalSent": "Total Sent",
+      "totalRecv": "Total Recv"
     }
   },
   "form": {

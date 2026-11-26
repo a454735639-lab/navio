@@ -29,6 +29,11 @@ declare namespace SystemMonitor {
         usedPercent: number
     }
 
+    interface NetworkInfo {
+        rxBytes: number // 累计接收字节
+        txBytes: number // 累计发送字节
+    }
+
     interface GetAllRes {
         cpuInfo: CPUInfo
         diskInfo: DiskInfo[]

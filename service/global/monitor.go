@@ -5,9 +5,10 @@ import (
 )
 
 const (
-	SystemMonitor_CPU_INFO    = "CPU_INFO"
-	SystemMonitor_MEMORY_INFO = "MEMORY_INFO"
-	SystemMonitor_DISK_INFO   = "DISK_INFO"
+	SystemMonitor_CPU_INFO     = "CPU_INFO"
+	SystemMonitor_MEMORY_INFO  = "MEMORY_INFO"
+	SystemMonitor_DISK_INFO    = "DISK_INFO"
+	SystemMonitor_NETWORK_INFO = "NETWORK_INFO"
 )
 
 type ModelSystemMonitor struct {

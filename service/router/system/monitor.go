@@ -19,5 +19,6 @@ func InitMonitorRouter(router *gin.RouterGroup) {
 		rPublic.POST("/system/monitor/getCpuState", api.GetCpuState)
 		rPublic.POST("/system/monitor/getDiskStateByPath", api.GetDiskStateByPath)
 		rPublic.POST("/system/monitor/getMemonyState", api.GetMemonyState)
+		rPublic.POST("/system/monitor/getNetworkState", api.GetNetworkState)
 	}
 }

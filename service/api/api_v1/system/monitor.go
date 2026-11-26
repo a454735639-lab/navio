@@ -59,6 +59,21 @@ func (a *MonitorApi) GetMemonyState(c *gin.Context) {
 	apiReturn.SuccessData(c, memoryInfo)
 }
 
+func (a *MonitorApi) GetNetworkState(c *gin.Context) {
+	if v, ok := global.SystemMonitor.Get(global.SystemMonitor_NETWORK_INFO); ok {
+		global.Logger.Debugln("读取缓存的NETWORK信息")
+		apiReturn.SuccessData(c, v)
+		return
+	}
+	netInfo, err := monitor.GetNetworkInfo()
+	if err != nil {
+		apiReturn.Error(c, "failed")
+		return
+	}
+	global.SystemMonitor.Set(global.SystemMonitor_NETWORK_INFO, netInfo, cacheSecond*time.Second)
+	apiReturn.SuccessData(c, netInfo)
+}
+
 func (a *MonitorApi) GetDiskStateByPath(c *gin.Context) {
 
 	req := systemApiStructs.MonitorGetDiskStateByPathReq{}

@@ -6,6 +6,7 @@ import GenericMonitorCard from '../components/GenericMonitorCard/index.vue'
 import CardCPU from './CPU.vue'
 import Memory from './Memory.vue'
 import Disk from './Disk.vue'
+import Network from './Network.vue'
 import { SvgIcon } from '@/components/common'
 import { PanelPanelConfigStyleEnum } from '@/enums'
 
@@ -28,6 +29,8 @@ const iconText = computed(() => {
       return props.extendParam.path
     case MonitorType.memory:
       return 'RAM'
+    case MonitorType.network:
+      return 'NET'
   }
   return ''
 })
@@ -50,6 +53,7 @@ const refreshInterval = 5000
             <SvgIcon v-if="monitorType === MonitorType.cpu" icon="solar-cpu-bold" :style="{ color: extendParam.color }" style="width:35px;height:35px" />
             <SvgIcon v-if="monitorType === MonitorType.memory" icon="material-symbols-memory-alt-rounded" :style="{ color: extendParam.color }" style="width:35px;height:35px" />
             <SvgIcon v-if="monitorType === MonitorType.disk" icon="clarity-hard-disk-solid" :style="{ color: extendParam.color }" style="width:35px;height:35px" />
+            <SvgIcon v-if="monitorType === MonitorType.network" icon="solar-transfer-horizontal-bold" :style="{ color: extendParam.color }" style="width:35px;height:35px" />
           </div>
         </div>
       </template>
@@ -84,6 +88,14 @@ const refreshInterval = 5000
             :title="extendParam?.title"
             :refresh-interval="refreshInterval"
           />
+          <Network
+            v-else-if="monitorType === MonitorType.network"
+            :card-type-style="PanelPanelConfigStyleEnum.info"
+            :progress-color="extendParam?.progressColor"
+            :progress-rail-color="extendParam?.progressRailColor"
+            :text-color="extendParam?.color"
+            :refresh-interval="refreshInterval"
+          />
         </div>
       </template>
       <template #small>
@@ -111,6 +123,14 @@ const refreshInterval = 5000
           :text-color="extendParam?.color"
           :path="extendParam?.path"
           :title="extendParam?.title"
+          :refresh-interval="refreshInterval"
+        />
+        <Network
+          v-else-if="monitorType === MonitorType.network"
+          :card-type-style="PanelPanelConfigStyleEnum.icon"
+          :progress-color="extendParam?.progressColor"
+          :progress-rail-color="extendParam?.progressRailColor"
+          :text-color="extendParam?.color"
           :refresh-interval="refreshInterval"
         />
       </template>
