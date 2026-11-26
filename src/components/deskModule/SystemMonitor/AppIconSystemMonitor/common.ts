@@ -1,4 +1,5 @@
 import { PanelPanelConfigStyleEnum } from '@/enums'
+import { bytesToSize } from '@/utils/cmn'
 
 export function correctionNumberByCardStyle(v: number, cardStyle: PanelPanelConfigStyleEnum): number {
   let keepNum = 0
@@ -23,4 +24,16 @@ export function allCPUUsages(cpuInfo: SystemMonitor.CPUInfo | null) {
     countPercentage += element
   }
   return countPercentage / cpuInfo.usages.length
+}
+
+/** 内存/磁盘用量文本：单位相同时只显示一个（如 5.3/7.5 GB），窄屏下更省宽度 */
+
+export function sizePairText(used: number, total: number): string {
+  const a = bytesToSize(used)
+  const b = bytesToSize(total)
+  const [na, ua] = a.includes(' ') ? a.split(' ') : [a, '']
+  const [nb, ub] = b.includes(' ') ? b.split(' ') : [b, '']
+  if (!ua || !ub || ua !== ub)
+    return `${a}/${b}`
+  return `${na}/${nb} ${ua}`
 }

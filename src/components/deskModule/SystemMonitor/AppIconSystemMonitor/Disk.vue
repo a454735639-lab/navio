@@ -2,7 +2,7 @@
 import { onMounted, onUnmounted, ref } from 'vue'
 import { NPopover } from 'naive-ui'
 import GenericProgress from '../components/GenericProgress/index.vue'
-import { correctionNumber, correctionNumberByCardStyle } from './common'
+import { correctionNumber, correctionNumberByCardStyle, sizePairText } from './common'
 import type { PanelPanelConfigStyleEnum } from '@/enums'
 import { bytesToSize } from '@/utils/cmn'
 import { getDiskStateByPath } from '@/api/system/systemMonitor'
@@ -59,7 +59,7 @@ onUnmounted(() => {
         :progress-color="progressColor" :progress-rail-color="progressRailColor" :progress-height="5"
         :percentage="correctionNumberByCardStyle(diskState?.usedPercent || 0, cardTypeStyle)"
         :card-type-style="cardTypeStyle"
-        :info-card-right-text="`${formatdiskSize(formatdiskToByte(diskState?.used || 0))}/${formatdiskSize(formatdiskToByte(diskState?.total || 0))}`"
+        :info-card-right-text="sizePairText(diskState?.used || 0, diskState?.total || 0)"
         :info-card-left-text="title || diskState?.mountpoint" :text-color="textColor" class="cursor-pointer"
       />
     </template>
