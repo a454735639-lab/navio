@@ -474,7 +474,8 @@ onUnmounted(() => {
           <div
             v-for="(itemGroup, itemGroupIndex) in filterItems" :id="`item-group-${itemGroup.onlyName}`"
             :key="itemGroupIndex"
-            class="item-list group-glass mt-[28px]"
+            class="item-list group-glass mt-[28px] group-enter"
+            :style="{ animationDelay: `${Math.min(itemGroupIndex, 8) * 60}ms` }"
             :class="`item-group-${itemGroup.onlyName} item-group-index-${itemGroupIndex} ${itemGroup.sortStatus ? (`border shadow-[0_8px_30px_rgba(0,0,0,0.3)] p-[16px] rounded-2xl `) : ''}`"
             @mouseenter="handleSetHoverStatus(itemGroupIndex, true)"
             @mouseleave="handleSetHoverStatus(itemGroupIndex, false)"
@@ -764,6 +765,28 @@ html {
 
 .item-list {
   transition: background-color 0.25s, box-shadow 0.25s;
+}
+
+/* Pass motion: 分组依次淡入，仅首次加载，不干扰拖拽 */
+.group-enter {
+  animation: groupFadeIn 0.42s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+@keyframes groupFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .group-enter {
+    animation: none;
+  }
 }
 
 .icon-info-box {
