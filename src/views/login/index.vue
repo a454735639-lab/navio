@@ -168,7 +168,7 @@ onMounted(() => {
 
           <NButton
             type="primary" size="large" block :loading="loading"
-            class="submit"
+            class="submit" @click="loginPost"
           >
             {{ $t('login.loginButton') }}
           </NButton>
