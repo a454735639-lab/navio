@@ -162,7 +162,11 @@
       "disconnected": "Disconnected",
       "logError": "Failed to load logs",
       "emptyLog": "No logs yet",
-      "noContainerId": "Missing container ID"
+      "noContainerId": "Missing container ID",
+      "monitor": "Monitor",
+      "resourceChart": "Resources",
+      "memory": "Memory",
+      "realtime": "Real-time"
     },
     "exportImport": {
       "appName": "Export/Import",

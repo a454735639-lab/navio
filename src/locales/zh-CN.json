@@ -162,7 +162,11 @@
       "disconnected": "已断开",
       "logError": "日志加载失败",
       "emptyLog": "暂无日志",
-      "noContainerId": "缺少容器 ID"
+      "noContainerId": "缺少容器 ID",
+      "monitor": "监控",
+      "resourceChart": "资源曲线",
+      "memory": "内存",
+      "realtime": "实时"
     },
     "exportImport": {
       "appName": "导出导入",

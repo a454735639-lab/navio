@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { SelectOption } from 'naive-ui'
 import { computed, nextTick, ref, watch } from 'vue'
-import { NButton, NDrawer, NDrawerContent, NSelect, NSwitch, useMessage } from 'naive-ui'
+import { NButton, NDrawer, NDrawerContent, NSelect, NSwitch, NTabPane, NTabs, useMessage } from 'naive-ui'
 import { streamContainerLogs } from '@/api/docker/container'
+import ResourceChart from './ResourceChart.vue'
 import { t } from '@/locales'
 
 const props = defineProps<{
@@ -23,6 +24,7 @@ const connected = ref(false)
 const errMsg = ref('')
 const logBox = ref<HTMLElement | null>(null)
 const tail = ref('200')
+const activeTab = ref('logs')
 let abortFn: (() => void) | null = null
 let streamGen = 0
 
@@ -123,8 +125,10 @@ function updateWidth() {
 
 watch(() => [props.visible, props.containerId], ([visible]) => {
   updateWidth()
-  if (visible && props.containerId)
+  if (visible && props.containerId) {
+    activeTab.value = 'logs'
     start()
+  }
   else if (!visible)
     stop()
 })
@@ -132,7 +136,9 @@ watch(() => [props.visible, props.containerId], ([visible]) => {
 
 <template>
   <NDrawer v-model:show="show" :width="drawerWidth" placement="right">
-    <NDrawerContent :title="`${containerName} ${t('apps.dockerManage.logs')}`" closable>
+    <NDrawerContent :title="`${containerName} ${t('apps.dockerManage.monitor')}`" closable>
+      <NTabs v-model:value="activeTab" type="line" size="small" animated>
+        <NTabPane name="logs" :tab="t('apps.dockerManage.logs')">
       <div class="log-toolbar">
         <div class="toolbar-item">
           <span class="toolbar-label">{{ t('apps.dockerManage.follow') }}</span>
@@ -168,6 +174,11 @@ watch(() => [props.visible, props.containerId], ([visible]) => {
           {{ line }}
         </div>
       </div>
+          </NTabPane>
+        <NTabPane name="resource" :tab="t('apps.dockerManage.resourceChart')">
+          <ResourceChart :container-id="containerId" :active="visible && activeTab === 'resource'" />
+        </NTabPane>
+      </NTabs>
     </NDrawerContent>
   </NDrawer>
 </template>

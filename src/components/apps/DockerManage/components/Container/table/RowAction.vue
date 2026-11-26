@@ -120,7 +120,7 @@ const switchValue = computed({
       {{ t('iconItem.dockerAction.restartConfirm') }}
     </NPopconfirm>
     <NButton size="tiny" @click="emit('openLogs')">
-      {{ t('apps.dockerManage.viewLogs') }}
+      {{ t('apps.dockerManage.monitor') }}
     </NButton>
   </div>
 </template>

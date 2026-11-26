@@ -38,15 +38,17 @@ type ExecSwitchActionByContainerIDReq struct {
 }
 
 type ContainerStats struct {
-	CPUPercent   float64 `json:"cpuPercent"`
-	Memory       float64 `json:"memory"`
-	Cache        float64 `json:"cache"`
-	IORead       float64 `json:"ioRead"`
-	IOWrite      float64 `json:"ioWrite"`
-	NetworkRX    float64 `json:"networkRX"`
-	NetworkTX    float64 `json:"networkTX"`
-	RunStatus    string  `json:"runStatus"`
-	ErrorMassage string  `json:"errorMessage"`
+	CPUPercent    float64 `json:"cpuPercent"`
+	Memory        float64 `json:"memory"`
+	MemoryPercent float64 `json:"memoryPercent"`
+	MemoryLimit   float64 `json:"memoryLimit"`
+	Cache         float64 `json:"cache"`
+	IORead        float64 `json:"ioRead"`
+	IOWrite       float64 `json:"ioWrite"`
+	NetworkRX     float64 `json:"networkRX"`
+	NetworkTX     float64 `json:"networkTX"`
+	RunStatus     string  `json:"runStatus"`
+	ErrorMassage  string  `json:"errorMessage"`
 
 	ShotTime time.Time `json:"shotTime"`
 }
