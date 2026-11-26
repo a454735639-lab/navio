@@ -353,7 +353,7 @@ const aliveCache = new Map<string, { ok: boolean, at: number }>()
 const ALIVE_TTL = 60_000
 
 /** 探测单个地址是否可达（no-cors，任何响应都算活） */
-async function probeAlive(url: string, timeout = 3000): Promise<boolean> {
+async function probeAlive(url: string, timeout = 2000): Promise<boolean> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeout)
   try {
@@ -374,13 +374,14 @@ async function probeAlive(url: string, timeout = 3000): Promise<boolean> {
  */
 export async function checkItemsAlive(
   items: { id?: number, url?: string, lanUrl?: string }[],
-  timeout = 3000,
+  timeout = 2000,
+  maxItems = 30,
 ): Promise<Map<number, boolean>> {
   const result = new Map<number, boolean>()
   const queue: { id: number, target: string }[] = []
   const isHttps = window.location.protocol === 'https:'
 
-  for (const item of items) {
+  for (const item of items.slice(0, maxItems)) {
     if (item.id === undefined)
       continue
     const candidates = splitLanUrls(item.lanUrl).concat(splitLanUrls(item.url))
@@ -412,6 +413,6 @@ export async function checkItemsAlive(
       result.set(job.id, ok)
     }
   }
-  await Promise.all(Array.from({ length: Math.min(6, queue.length) }, worker))
+  await Promise.all(Array.from({ length: Math.min(4, queue.length) }, worker))
   return result
 }

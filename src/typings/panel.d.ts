@@ -89,6 +89,7 @@ declare namespace Panel {
         netModeChangeButtonShow?: boolean
         netModeChangeAuto?: boolean
         netModeChangeAutoMaxPingMs?: number
+        cardAliveDotShow?: boolean
         netProbeLanUrl?: string
         netProbeTsUrl?: string
     }

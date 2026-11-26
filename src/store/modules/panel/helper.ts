@@ -36,6 +36,7 @@ export function defaultStatePanelConfig(): Panel.panelConfig {
     netModeChangeButtonShow: true,
     netModeChangeAuto: false,
     netModeChangeAutoMaxPingMs: 600,
+    cardAliveDotShow: false,
     netProbeLanUrl: '',
     netProbeTsUrl: '',
   }

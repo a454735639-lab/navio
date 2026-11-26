@@ -341,6 +341,12 @@ function handleNetModeChangeAutoMaxPingMsChange(value: number) {
         {{ $t('apps.baseSettings.netModeChangeAutoHttpsTip') }}
       </div>
 
+      <div class="flex items-center mt-[10px] gap-2">
+        <span>{{ $t('apps.baseSettings.cardAliveDot') }}</span>
+        <NSwitch v-model:value="panelState.panelConfig.cardAliveDotShow" size="small" />
+        <span class="text-xs opacity-60">{{ $t('apps.baseSettings.cardAliveDotTip') }}</span>
+      </div>
+
       <div class="mt-[10px] text-xs text-slate-500 dark:text-slate-400">
         {{ $t('apps.baseSettings.netProbeTitle') }}
       </div>

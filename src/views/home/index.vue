@@ -113,8 +113,9 @@ async function getList() {
       // console.log('全部完毕')
       filterItems.value = items.value
 
-      // 卡片在线状态：等分组与卡片全部加载完再探测（结果缓存 60s）
-      refreshAlive()
+      // 卡片在线状态：开关开启时才探测，避免默认拖慢页面
+      if (panelState.panelConfig.cardAliveDotShow)
+        refreshAlive()
 
       // 未禁用缓存将保存为缓存数据
       if (appStore.siteSetting.isDisableItemCardCache === false) {
@@ -289,7 +290,7 @@ async function refreshAlive() {
   if (all.length === 0)
     return
   try {
-    const res = await checkItemsAlive(all, 3000)
+    const res = await checkItemsAlive(all, 2000, 30)
     aliveMap.value = res
   }
   catch {
