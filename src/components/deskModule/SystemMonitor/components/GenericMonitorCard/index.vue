@@ -5,7 +5,7 @@
 // -------------------
 
 import { ref } from 'vue'
-import { ItemCard, SvgIcon } from '@/components/common'
+import { ItemCard } from '@/components/common'
 import type { PanelPanelConfigStyleEnum } from '@/enums'
 
 interface Prop {
@@ -14,10 +14,7 @@ interface Prop {
   iconTextColor?: string
   iconTextIconHideTitle?: boolean
   iconText?: string
-  textColor?: string
   cardTypeStyle: PanelPanelConfigStyleEnum
-  // monitorType: string
-  icon?: string
   class?: string
   backgroundColor?: string
 }
