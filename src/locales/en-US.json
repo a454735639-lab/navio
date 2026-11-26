@@ -458,7 +458,9 @@
       "startContainer": "Start container",
       "stopContainer": "Stop container",
       "restartContainer": "Restart container",
-      "restartConfirm": "Restart this container now?"
+      "restartConfirm": "Restart this container now?",
+      "holdToRestart": "Hold to restart",
+      "releaseToCancel": "Release to cancel"
     },
     "dockerContainerError": "Container exception",
     "dockerGetContainerListFailed": "Failed to get container list",

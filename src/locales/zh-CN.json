@@ -458,7 +458,9 @@
       "startContainer": "启动容器",
       "stopContainer": "停止容器",
       "restartContainer": "重启容器",
-      "restartConfirm": "确认立即重启该容器？"
+      "restartConfirm": "确认立即重启该容器？",
+      "holdToRestart": "长按重启",
+      "releaseToCancel": "松手取消"
     },
     "dockerContainerError": "容器异常",
     "dockerGetContainerListFailed": "获取容器列表失败",

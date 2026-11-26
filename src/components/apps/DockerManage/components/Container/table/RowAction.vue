@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { NButton, NPopconfirm, NSwitch, useMessage } from 'naive-ui'
+import { NButton, NSwitch, useMessage } from 'naive-ui'
 import { computed, ref } from 'vue'
 import { useDockerStore } from '../../../store/docker'
 import { DockerContainerInfoState } from '@/enums/docker'
 import { execSwitchAction, restartContainer } from '@/api/docker/container'
 import { apiRespErrMsg } from '@/utils/cmn/apiMessage'
 import { t } from '@/locales'
+import HoldConfirmButton from '@/components/common/HoldConfirmButton/index.vue'
 
 const props = defineProps<{
   value: Docker.Container.Info
@@ -111,14 +112,15 @@ const switchValue = computed({
     <div v-else>
       <NSwitch v-model:value="switchValue" :loading="switchLoading" disabled />
     </div>
-    <NPopconfirm v-if="restartShow" @positive-click="doRestart">
-      <template #trigger>
-        <NButton size="tiny" type="warning" :loading="restartLoading">
-          {{ t('iconItem.dockerAction.restartContainer') }}
-        </NButton>
-      </template>
-      {{ t('iconItem.dockerAction.restartConfirm') }}
-    </NPopconfirm>
+    <HoldConfirmButton
+      v-if="restartShow"
+      :loading="restartLoading"
+      :disabled="restartLoading"
+      :aria-label="t('iconItem.dockerAction.restartContainer')"
+      @confirm="doRestart"
+    >
+      {{ t('iconItem.dockerAction.holdToRestart') }}
+    </HoldConfirmButton>
     <NButton size="tiny" @click="emit('openLogs')">
       {{ t('apps.dockerManage.monitor') }}
     </NButton>

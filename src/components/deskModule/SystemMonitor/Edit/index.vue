@@ -80,6 +80,8 @@ function handleResetExtendParam() {
 
 // 保存提交
 async function handleSubmit() {
+  if (submitLoading.value)
+    return
   let verificationRes = true
   currentMonitorData.value.monitorType = active.value as MonitorType
   if (currentMonitorData.value.monitorType === MonitorType.cpu || currentMonitorData.value.monitorType === MonitorType.memory || currentMonitorData.value.monitorType === MonitorType.network) {
@@ -96,25 +98,31 @@ async function handleSubmit() {
   if (!verificationRes)
     return
 
-  if (props.index !== null) {
-    const res = await saveByIndex(props.index, currentMonitorData.value)
-    if (res) {
-      show.value = false
-      emit('done', true)
+  submitLoading.value = true
+  try {
+    if (props.index !== null) {
+      const res = await saveByIndex(props.index, currentMonitorData.value)
+      if (res) {
+        show.value = false
+        emit('done', true)
+      }
+      else {
+        ms.error(t('common.saveFail'))
+      }
     }
     else {
-      ms.error(t('common.saveFail'))
+      const res = await add(currentMonitorData.value)
+      if (res) {
+        show.value = false
+        emit('done', true)
+      }
+      else {
+        ms.error(t('common.saveFail'))
+      }
     }
   }
-  else {
-    const res = await add(currentMonitorData.value)
-    if (res) {
-      show.value = false
-      emit('done', true)
-    }
-    else {
-      ms.error(t('common.saveFail'))
-    }
+  finally {
+    submitLoading.value = false
   }
 }
 </script>
