@@ -433,7 +433,9 @@
       "upload": "Upload",
       "download": "Download",
       "totalSent": "Total Sent",
-      "totalRecv": "Total Recv"
+      "totalRecv": "Total Recv",
+      "networkState": "Network",
+      "networkTip": "Show global realtime upload / download speed"
     }
   },
   "form": {

@@ -64,7 +64,7 @@ const show = computed({
 
 watch(() => props.visible, (value) => {
   active.value = props.monitorData?.monitorType || MonitorType.cpu
-  if (props.monitorData?.monitorType === MonitorType.cpu || props.monitorData?.monitorType === MonitorType.memory)
+  if (props.monitorData?.monitorType === MonitorType.cpu || props.monitorData?.monitorType === MonitorType.memory || props.monitorData?.monitorType === MonitorType.network)
     currentGenericProgressStyleExtendParam.value = { ...props.monitorData?.extendParam }
   else if (props.monitorData?.monitorType === MonitorType.disk)
     currentDiskExtendParam.value = { ...props.monitorData?.extendParam }
@@ -82,7 +82,7 @@ function handleResetExtendParam() {
 async function handleSubmit() {
   let verificationRes = true
   currentMonitorData.value.monitorType = active.value as MonitorType
-  if (currentMonitorData.value.monitorType === MonitorType.cpu || currentMonitorData.value.monitorType === MonitorType.memory) {
+  if (currentMonitorData.value.monitorType === MonitorType.cpu || currentMonitorData.value.monitorType === MonitorType.memory || currentMonitorData.value.monitorType === MonitorType.network) {
     currentMonitorData.value.extendParam = currentGenericProgressStyleExtendParam
   }
   else if (currentMonitorData.value.monitorType === MonitorType.disk) {
@@ -143,6 +143,14 @@ async function handleSubmit() {
         </NTabPane>
         <NTabPane :name="MonitorType.disk" :tab="$t('deskModule.systemMonitor.diskState')">
           <DiskEditor ref="DiskEditorRef" v-model:disk-extend-param="currentDiskExtendParam" />
+        </NTabPane>
+        <NTabPane :name="MonitorType.network" :tab="$t('deskModule.systemMonitor.networkState')">
+          <div class="text-xs opacity-60 mb-2">
+            {{ $t('deskModule.systemMonitor.networkTip') }}
+          </div>
+          <GenericProgressStyleEditor
+            v-model:genericProgressStyleExtendParam="currentGenericProgressStyleExtendParam"
+          />
         </NTabPane>
       </NTabs>
       <NButton @click="handleResetExtendParam">
