@@ -37,19 +37,8 @@ const propClass = ref(props.class)
       :icon-text-icon-hide-title="iconTextIconHideTitle"
     >
       <template #info>
-        <!-- 图标 -->
-        <div class="w-[60px] h-[70px]">
-          <div class="w-[60px] h-full flex items-center justify-center text-white">
-            <slot name="icon">
-              <SvgIcon :icon="icon ?? ''" style="width: 35px;height: 35px;" :style="{ color: textColor }" />
-            </slot>
-          </div>
-        </div>
-
-        <div
-          class=" w-full text-white flex items-center"
-          :style=" { maxWidth: 'calc(100% - 80px)' }"
-        >
+        <!-- info 模式：环形仪表居中，不预留左侧图标空间（1Panel 环形瓦片以环形为视觉主体） -->
+        <div class="w-full text-white flex items-center justify-center">
           <slot name="info" />
         </div>
       </template>

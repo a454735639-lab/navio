@@ -46,7 +46,7 @@ const displayInt = computed(() => {
         </svg>
         <div class="absolute inset-0 flex items-center justify-center" :style="{ color: textColor }">
           <span style="font-size: 19px; font-weight: 600; line-height: 1;">{{ displayInt }}</span>
-          <span style="font-size: 11px; margin-left: 1px; align-self: flex-start; margin-top: 3px;">%</span>
+          <span style="font-size: 11px; margin-left: 1px; margin-bottom: 7px;">%</span>
         </div>
       </div>
       <div class="mt-2 text-sm font-medium text-center w-full px-1" :style="{ color: textColor }">
