@@ -35,7 +35,7 @@ const displayInt = computed(() => {
 <template>
   <template v-if="cardTypeStyle === PanelPanelConfigStyleEnum.info">
     <div class="flex flex-col items-center justify-center w-full py-1">
-      <div class="relative" style="width: 74px; height: 74px;">
+      <div class="relative" style="width: 56px; height: 56px;">
         <svg viewBox="0 0 100 100" style="width: 100%; height: 100%;">
           <circle cx="50" cy="50" :r="R" fill="none" :stroke="progressRailColor" stroke-width="8" stroke-opacity="0.3" />
           <circle
@@ -45,11 +45,11 @@ const displayInt = computed(() => {
           />
         </svg>
         <div class="absolute inset-0 flex items-center justify-center" :style="{ color: textColor }">
-          <span style="font-size: 19px; font-weight: 600; line-height: 1;">{{ displayInt }}</span>
-          <span style="font-size: 11px; margin-left: 1px; margin-bottom: 7px;">%</span>
+          <span style="font-size: 15px; font-weight: 600; line-height: 1;">{{ displayInt }}</span>
+          <span style="font-size: 9px; margin-left: 1px; margin-bottom: 5px;">%</span>
         </div>
       </div>
-      <div class="mt-2 text-sm font-medium text-center w-full px-1" :style="{ color: textColor }">
+      <div class="mt-1 text-sm font-medium text-center w-full px-1" :style="{ color: textColor }">
         <NEllipsis>{{ infoCardLeftText }}</NEllipsis>
       </div>
       <div class="text-xs opacity-60 text-center w-full px-1 mt-[2px]" :style="{ color: textColor }">

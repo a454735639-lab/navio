@@ -88,14 +88,14 @@ onUnmounted(() => {
       <!-- 详情风格：竖向大号 ↑↓，和环形仪表卡布局协调 -->
       <div v-if="cardTypeStyle === PanelPanelConfigStyleEnum.info" class="flex flex-col items-center justify-center w-full py-1">
         <div class="text-center" :style="{ color: textColor }">
-          <div style="font-size: 15px; font-weight: 600; line-height: 1.3;">
+          <div style="font-size: 12px; font-weight: 600; line-height: 1.3;">
             <span :style="{ color: progressColor }">↑{{ formatSpeed(speed.tx) }}</span>
           </div>
-          <div style="font-size: 15px; font-weight: 600; line-height: 1.3; margin-top: 4px;">
+          <div style="font-size: 12px; font-weight: 600; line-height: 1.3; margin-top: 4px;">
             <span :style="{ color: RX_COLOR }">↓{{ formatSpeed(speed.rx) }}</span>
           </div>
         </div>
-        <div class="mt-2 text-sm font-medium text-center w-full px-1" :style="{ color: textColor }">
+        <div class="mt-1 text-sm font-medium text-center w-full px-1" :style="{ color: textColor }">
           {{ $t('deskModule.systemMonitor.network') }}
         </div>
         <div class="text-xs opacity-60 text-center w-full px-1 mt-[2px]" :style="{ color: textColor }">
