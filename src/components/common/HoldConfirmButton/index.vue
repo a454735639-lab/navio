@@ -97,7 +97,6 @@ onUnmounted(() => cancelAnimationFrame(raf))
     :disabled="disabled || loading"
     role="button"
     tabindex="0"
-    :aria-label="$attrs['aria-label']"
     @pointerdown="start"
     @pointerup="cancel"
     @pointercancel="cancel"
