@@ -2,9 +2,8 @@
 import { onMounted, onUnmounted, ref } from 'vue'
 import { NPopover } from 'naive-ui'
 import GenericProgress from '../components/GenericProgress/index.vue'
-import Sparkline from '../components/Sparkline/index.vue'
 import { correctionNumber, correctionNumberByCardStyle, sizePairText } from './common'
-import { PanelPanelConfigStyleEnum } from '@/enums'
+import type { PanelPanelConfigStyleEnum } from '@/enums'
 import { bytesToSize } from '@/utils/cmn'
 import { getDiskStateByPath } from '@/api/system/systemMonitor'
 
@@ -21,7 +20,6 @@ interface Prop {
 const props = defineProps<Prop>()
 let timer: any // NodeJS.Timer
 const diskState = ref<SystemMonitor.DiskInfo | null>(null)
-const diskHistory = ref<number[]>([])
 
 function formatdiskSize(v: number): string {
   return bytesToSize(v)
@@ -34,12 +32,8 @@ function formatdiskToByte(v: number): number {
 async function getData() {
   try {
     const { data, code } = await getDiskStateByPath<SystemMonitor.DiskInfo>(props.path)
-    if (code === 0) {
+    if (code === 0)
       diskState.value = data
-      diskHistory.value.push(data.usedPercent)
-      if (diskHistory.value.length > 30)
-        diskHistory.value.shift()
-    }
   }
   catch (error) {
     console.error(error)
@@ -61,19 +55,13 @@ onUnmounted(() => {
 <template>
   <NPopover trigger="click">
     <template #trigger>
-      <div class="w-full">
-        <GenericProgress
-          :progress-color="progressColor" :progress-rail-color="progressRailColor" :progress-height="5"
-          :percentage="correctionNumberByCardStyle(diskState?.usedPercent || 0, cardTypeStyle)"
-          :card-type-style="cardTypeStyle"
-          :info-card-right-text="sizePairText(diskState?.used || 0, diskState?.total || 0)"
-          :info-card-left-text="title || diskState?.mountpoint" :text-color="textColor" class="cursor-pointer"
-        />
-        <Sparkline
-          v-if="cardTypeStyle === PanelPanelConfigStyleEnum.info" :data="diskHistory" :color="progressColor"
-          :max="100" :height="26" class="mt-[6px]"
-        />
-      </div>
+      <GenericProgress
+        :progress-color="progressColor" :progress-rail-color="progressRailColor" :progress-height="5"
+        :percentage="correctionNumberByCardStyle(diskState?.usedPercent || 0, cardTypeStyle)"
+        :card-type-style="cardTypeStyle"
+        :info-card-right-text="sizePairText(diskState?.used || 0, diskState?.total || 0)"
+        :info-card-left-text="title || diskState?.mountpoint" :text-color="textColor" class="cursor-pointer"
+      />
     </template>
 
     <div>

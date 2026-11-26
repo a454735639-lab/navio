@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { NPopover } from 'naive-ui'
 import { PanelPanelConfigStyleEnum } from '@/enums'
 import { getNetworkState } from '@/api/system/systemMonitor'
-import Sparkline from '../components/Sparkline/index.vue'
 
 interface Prop {
   cardTypeStyle: PanelPanelConfigStyleEnum
@@ -17,18 +16,10 @@ const props = defineProps<Prop>()
 let timer: any
 const netState = ref<SystemMonitor.NetworkInfo | null>(null)
 const speed = ref({ rx: 0, tx: 0 })
-// 双线趋势：上传(progressColor) + 下载(橙)，统一刻度归一化
-const txHistory = ref<number[]>([])
-const rxHistory = ref<number[]>([])
 const RX_COLOR = '#f0883e'
 let lastRx = 0
 let lastTx = 0
 let lastTime = 0
-
-const netMax = computed(() => {
-  const m = Math.max(...txHistory.value, ...rxHistory.value, 0)
-  return m > 0 ? m : 1
-})
 
 function formatSpeed(bytesPerSec: number): string {
   if (bytesPerSec < 1024)
@@ -50,7 +41,6 @@ function formatBytes(bytes: number): string {
 function calcSpeed(curRx: number, curTx: number) {
   const now = Date.now()
   if (lastTime === 0 || curRx < lastRx || curTx < lastTx) {
-    // 首次采样或累计值归零（系统重启），重新基准
     lastRx = curRx
     lastTx = curTx
     lastTime = now
@@ -67,13 +57,6 @@ function calcSpeed(curRx: number, curTx: number) {
   lastRx = curRx
   lastTx = curTx
   lastTime = now
-  // 记录趋势（30 点滑动窗口）
-  txHistory.value.push(speed.value.tx)
-  rxHistory.value.push(speed.value.rx)
-  if (txHistory.value.length > 30) {
-    txHistory.value.shift()
-    rxHistory.value.shift()
-  }
 }
 
 async function getData() {
@@ -102,21 +85,24 @@ onUnmounted(() => {
 <template>
   <NPopover trigger="click">
     <template #trigger>
-      <!-- 详情风格：大号 ↑↓ + 双线趋势 -->
-      <div v-if="cardTypeStyle === PanelPanelConfigStyleEnum.info" class="w-full">
-        <div class="flex justify-between items-baseline mb-[4px]" :style="{ color: textColor }">
-          <span class="text-xs font-medium">NET</span>
-          <span class="text-xs">
+      <!-- 详情风格：竖向大号 ↑↓，和环形仪表卡布局协调 -->
+      <div v-if="cardTypeStyle === PanelPanelConfigStyleEnum.info" class="flex flex-col items-center justify-center w-full py-1">
+        <div class="text-center" :style="{ color: textColor }">
+          <div style="font-size: 15px; font-weight: 600; line-height: 1.3;">
             <span :style="{ color: progressColor }">↑{{ formatSpeed(speed.tx) }}</span>
-            <span class="ml-2" :style="{ color: RX_COLOR }">↓{{ formatSpeed(speed.rx) }}</span>
-          </span>
+          </div>
+          <div style="font-size: 15px; font-weight: 600; line-height: 1.3; margin-top: 4px;">
+            <span :style="{ color: RX_COLOR }">↓{{ formatSpeed(speed.rx) }}</span>
+          </div>
         </div>
-        <div class="relative w-full" style="height: 30px;">
-          <Sparkline :data="txHistory" :color="progressColor" :max="netMax" :height="30" class="absolute inset-0" />
-          <Sparkline :data="rxHistory" :color="RX_COLOR" :max="netMax" :height="30" class="absolute inset-0" />
+        <div class="mt-2 text-sm font-medium text-center w-full px-1" :style="{ color: textColor }">
+          {{ $t('deskModule.systemMonitor.network') }}
+        </div>
+        <div class="text-xs opacity-60 text-center w-full px-1 mt-[2px]" :style="{ color: textColor }">
+          {{ $t('deskModule.systemMonitor.upload') }}{{ formatBytes(netState?.txBytes || 0) }}
         </div>
       </div>
-      <!-- 图标风格：竖排数字（空间小不加趋势） -->
+      <!-- 图标风格：竖排数字 -->
       <div v-else class="w-full flex flex-col justify-center items-center h-full mt-3 gap-[2px]">
         <div style="font-size: 9px;" :style="{ color: progressColor }">
           ↑{{ formatSpeed(speed.tx) }}

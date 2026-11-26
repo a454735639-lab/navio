@@ -2,10 +2,9 @@
 import { onMounted, onUnmounted, ref } from 'vue'
 import { NGrid, NGridItem, NPopover, NProgress } from 'naive-ui'
 import GenericProgress from '../components/GenericProgress/index.vue'
-import Sparkline from '../components/Sparkline/index.vue'
 import { allCPUUsages, correctionNumber, correctionNumberByCardStyle } from './common'
 import { getCpuState } from '@/api/system/systemMonitor'
-import { PanelPanelConfigStyleEnum } from '@/enums'
+import type { PanelPanelConfigStyleEnum } from '@/enums'
 
 interface Prop {
   cardTypeStyle: PanelPanelConfigStyleEnum
@@ -18,17 +17,12 @@ interface Prop {
 const props = defineProps<Prop>()
 let timer: any
 const cpuState = ref<SystemMonitor.CPUInfo | null>(null)
-const cpuHistory = ref<number[]>([])
 
 async function getData() {
   try {
     const { data, code } = await getCpuState<SystemMonitor.CPUInfo>()
-    if (code === 0) {
+    if (code === 0)
       cpuState.value = data
-      cpuHistory.value.push(allCPUUsages(data))
-      if (cpuHistory.value.length > 30)
-        cpuHistory.value.shift()
-    }
   }
   catch (error) {
     console.error(error)
@@ -50,18 +44,12 @@ onUnmounted(() => {
 <template>
   <NPopover trigger="click">
     <template #trigger>
-      <div class="w-full">
-        <GenericProgress
-          :progress-color="progressColor" :progress-rail-color="progressRailColor" :progress-height="5"
-          :percentage="correctionNumberByCardStyle(allCPUUsages(cpuState), cardTypeStyle)"
-          :card-type-style="cardTypeStyle" :info-card-right-text="`${correctionNumber(allCPUUsages(cpuState))}%`"
-          info-card-left-text="CPU" :text-color="textColor" style="width: 100%;" class="cursor-pointer"
-        />
-        <Sparkline
-          v-if="cardTypeStyle === PanelPanelConfigStyleEnum.info" :data="cpuHistory" :color="progressColor"
-          :max="100" :height="26" class="mt-[6px]"
-        />
-      </div>
+      <GenericProgress
+        :progress-color="progressColor" :progress-rail-color="progressRailColor" :progress-height="5"
+        :percentage="correctionNumberByCardStyle(allCPUUsages(cpuState), cardTypeStyle)"
+        :card-type-style="cardTypeStyle" :info-card-right-text="`${correctionNumber(allCPUUsages(cpuState))}%`"
+        info-card-left-text="CPU" :text-color="textColor" style="width: 100%;" class="cursor-pointer"
+      />
     </template>
 
     <div class="mt-2">

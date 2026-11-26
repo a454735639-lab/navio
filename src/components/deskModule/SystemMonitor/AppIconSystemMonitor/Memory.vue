@@ -2,10 +2,9 @@
 import { onMounted, onUnmounted, ref } from 'vue'
 import { NPopover } from 'naive-ui'
 import GenericProgress from '../components/GenericProgress/index.vue'
-import Sparkline from '../components/Sparkline/index.vue'
 import { correctionNumber, correctionNumberByCardStyle, sizePairText } from './common'
 import { getMemonyState } from '@/api/system/systemMonitor'
-import { PanelPanelConfigStyleEnum } from '@/enums'
+import type { PanelPanelConfigStyleEnum } from '@/enums'
 import { bytesToSize } from '@/utils/cmn'
 
 interface Prop {
@@ -19,7 +18,6 @@ interface Prop {
 const props = defineProps<Prop>()
 let timer: any // NodeJS.Timer
 const memoryState = ref<SystemMonitor.MemoryInfo | null>(null)
-const memHistory = ref<number[]>([])
 
 function formatMemorySize(v: number): string {
   return bytesToSize(v)
@@ -28,12 +26,8 @@ function formatMemorySize(v: number): string {
 async function getData() {
   try {
     const { data, code } = await getMemonyState<SystemMonitor.MemoryInfo>()
-    if (code === 0) {
+    if (code === 0)
       memoryState.value = data
-      memHistory.value.push(data.usedPercent)
-      if (memHistory.value.length > 30)
-        memHistory.value.shift()
-    }
   }
   catch (error) {
     console.error(error)
@@ -55,19 +49,13 @@ onUnmounted(() => {
 <template>
   <NPopover trigger="click">
     <template #trigger>
-      <div class="w-full">
-        <GenericProgress
-          :progress-color="progressColor" :progress-rail-color="progressRailColor" :progress-height="5"
-          :percentage="correctionNumberByCardStyle(memoryState?.usedPercent || 0, cardTypeStyle)"
-          :card-type-style="cardTypeStyle"
-          :info-card-right-text="sizePairText(memoryState?.used || 0, memoryState?.total || 0)"
-          info-card-left-text="RAM" :text-color="textColor" class="cursor-pointer"
-        />
-        <Sparkline
-          v-if="cardTypeStyle === PanelPanelConfigStyleEnum.info" :data="memHistory" :color="progressColor"
-          :max="100" :height="26" class="mt-[6px]"
-        />
-      </div>
+      <GenericProgress
+        :progress-color="progressColor" :progress-rail-color="progressRailColor" :progress-height="5"
+        :percentage="correctionNumberByCardStyle(memoryState?.usedPercent || 0, cardTypeStyle)"
+        :card-type-style="cardTypeStyle"
+        :info-card-right-text="sizePairText(memoryState?.used || 0, memoryState?.total || 0)"
+        info-card-left-text="RAM" :text-color="textColor" class="cursor-pointer"
+      />
     </template>
 
     <div>
