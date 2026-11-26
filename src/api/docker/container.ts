@@ -88,6 +88,17 @@ export function streamContainerLogs(
         signal: controller.signal,
       })
 
+      const contentType = resp.headers.get('content-type')?.toLowerCase() || ''
+      if (contentType.includes('application/json')) {
+        let msg = `HTTP ${resp.status}`
+        try {
+          const j = await resp.json()
+          msg = j?.msg || j?.message || msg
+        }
+        catch {}
+        onError(msg)
+        return
+      }
       if (!resp.ok || !resp.body) {
         let msg = `HTTP ${resp.status}`
         try {

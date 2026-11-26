@@ -30,7 +30,8 @@ const cpuData = ref<number[]>([])
 const memData = ref<number[]>([])
 const lastMem = ref<{ usage: number, limit: number }>({ usage: 0, limit: 0 })
 const err = ref('')
-let timer: any = null
+let timer: ReturnType<typeof setTimeout> | null = null
+let sampleGeneration = 0
 
 const gridLines = [0, 25, 50, 75, 100].map(v => ({ v, y: padT + (1 - v / 100) * plotH }))
 
@@ -61,11 +62,13 @@ const memLast = computed(() => lastPt(memData.value))
 const cpuNow = computed(() => cpuData.value.length ? cpuData.value[cpuData.value.length - 1] : null)
 const memNow = computed(() => memData.value.length ? memData.value[memData.value.length - 1] : null)
 
-async function sample() {
-  if (!props.containerId)
+async function sample(generation: number, containerId: string) {
+  if (!containerId || generation !== sampleGeneration)
     return
   try {
-    const { data } = await getContainerStatus<Stats>(props.containerId)
+    const { data } = await getContainerStatus<Stats>(containerId)
+    if (generation !== sampleGeneration || containerId !== props.containerId || !props.active)
+      return
     err.value = ''
     cpuData.value.push(data.cpuPercent || 0)
     memData.value.push(data.memoryPercent || 0)
@@ -76,7 +79,12 @@ async function sample() {
     }
   }
   catch (e: any) {
-    err.value = e?.msg || e?.message || 'error'
+    if (generation === sampleGeneration)
+      err.value = e?.msg || e?.message || 'error'
+  }
+  finally {
+    if (generation === sampleGeneration && props.active && props.containerId === containerId)
+      timer = setTimeout(() => sample(generation, containerId), INTERVAL)
   }
 }
 
@@ -84,13 +92,14 @@ function start() {
   stop()
   cpuData.value = []
   memData.value = []
-  sample()
-  timer = setInterval(sample, INTERVAL)
+  const generation = sampleGeneration
+  void sample(generation, props.containerId)
 }
 
 function stop() {
+  sampleGeneration++
   if (timer) {
-    clearInterval(timer)
+    clearTimeout(timer)
     timer = null
   }
 }

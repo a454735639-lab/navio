@@ -63,90 +63,97 @@ async function getGlobalConfig() {
   }
 }
 
+let requestGeneration = 0
+let activeRequests = 0
+
 async function getList() {
-  let isEnableSyncCache = false // 是否开启同步缓存数据 - 仅限首次无缓存数据时开启 - 非持久缓存数据
-  itemCardsLoading.value = true // 加载中
+  const generation = ++requestGeneration
+  activeRequests++
+  itemCardsLoading.value = true
+  try {
+    if (appStore.siteSetting.isDisableItemCardCache === false && panelState.itemGroupCardCacheData.length)
+      filterItems.value = panelState.itemGroupCardCacheData
 
-  // 是否全局禁用了缓存
-  if (appStore.siteSetting.isDisableItemCardCache === false) {
-    // 优先使用缓存数据
-    filterItems.value = panelState.itemGroupCardCacheData
-    nextTick(() => {
-      itemCardsLoading.value = false
-    })
-  }
-
-  // 当缓存的数据为0的时候，显示加载的loading
-  if (filterItems.value.length === 0) {
-    isEnableSyncCache = true // 如果之前没有缓存数据将开启
-  }
-
-  // 获取组数据
-  getGroupList<Common.ListResponse<ItemGroup[]>>().then(({ data }) => {
+    const { data } = await getGroupList<Common.ListResponse<ItemGroup[]>>()
+    if (generation !== requestGeneration)
+      return
     items.value = data.list
-
-    // 内外网自动识别：先把内网可达性探出来，点击卡片时直接命中缓存
+    if (filterItems.value.length === 0)
+      filterItems.value = items.value
     warmupNetworkMode(collectLanUrls(data.list), panelState.panelConfig.netModeChangeAutoMaxPingMs)
 
-    const getAllGroupList = async () => {
-      for (let i = 0; i < data.list.length; i++) {
-        const element = data.list[i]
-        // console.log('正在组', element.id)
-        if (element.id) {
-          await updateItemIconGroupByNet(i, element.id)
-        }
-
-        // 如果之前没有缓存数据将开启同步缓存数据
-        // 避免首次无缓存数据等待所有数据加载完毕显示延迟过高
-        if (isEnableSyncCache) {
-          filterItems.value = items.value
-
-          // 未禁用缓存将保存为缓存数据
-          if (appStore.siteSetting.isDisableItemCardCache === false) {
-            panelState.setItemGroupCacheData(items.value)
+    // Bounded workers make each completed group visible without request storms.
+    let cursor = 0
+    const worker = async () => {
+      while (cursor < data.list.length) {
+        const index = cursor++
+        const group = data.list[index]
+        if (!group.id)
+          continue
+        try {
+          const res = await getListByGroupId<Common.ListResponse<Panel.ItemInfo[]>>(group.id)
+          if (generation === requestGeneration && res.code === 0) {
+            items.value[index].items = res.data.list
+            if (filterItems.value === items.value || filterItems.value.length === 0)
+              filterItems.value = items.value
+            if (!appStore.siteSetting.isDisableItemCardCache)
+              panelState.setItemGroupCacheData(items.value)
           }
         }
+        catch (error) { apiRespErrMsg(error) }
       }
     }
-
-    getAllGroupList().then(() => {
-      // console.log('全部完毕')
-      filterItems.value = items.value
-
-      // 未禁用缓存将保存为缓存数据
-      if (appStore.siteSetting.isDisableItemCardCache === false) {
+    await Promise.all(Array.from({ length: Math.min(4, data.list.length) }, worker))
+    if (generation === requestGeneration) {
+      if (!appStore.siteSetting.isDisableItemCardCache)
         panelState.setItemGroupCacheData(items.value)
-        // console.log('已开启缓存')
-      }
-      else {
-        if (panelState.itemGroupCardCacheData.length !== 0) {
-          panelState.setItemGroupCacheData([])
-        }
-        // console.log('未开启缓存，置空')
-      }
-    })
-
-    // console.log(items)
-  }).catch((error) => {
-    apiRespErrMsg(error)
-  }).finally(() => {
-    itemCardsLoading.value = false
-  })
+      else if (panelState.itemGroupCardCacheData.length)
+        panelState.setItemGroupCacheData([])
+    }
+  }
+  catch (error) { if (generation === requestGeneration) apiRespErrMsg(error) }
+  finally {
+    activeRequests--
+    if (activeRequests === 0)
+      itemCardsLoading.value = false
+  }
 }
 
-// 从后端获取组下面的图标
-async function updateItemIconGroupByNet(itemIconGroupIndex: number, itemIconGroupId: number) {
-  await getListByGroupId<Common.ListResponse<Panel.ItemInfo[]>>(itemIconGroupId).then((res) => {
-    if (res.code === 0)
-      items.value[itemIconGroupIndex].items = res.data.list
-  }).catch((error) => {
-    apiRespErrMsg(error)
-  })
+function replaceItemLocally(item: Panel.ItemInfo) {
+  const target = items.value.find(g => g.id === item.itemIconGroupId)
+  for (const group of items.value) {
+    const index = group.items?.findIndex(i => i.id === item.id) ?? -1
+    if (index >= 0) group.items!.splice(index, 1)
+  }
+  if (target) {
+    target.items ||= []
+    const oldIndex = target.items.findIndex(i => i.id === item.id)
+    if (oldIndex >= 0) target.items.splice(oldIndex, 1, item)
+    else target.items.push(item)
+  }
+  // Keep the current filtered/sorted array and its group objects intact.
+  for (const group of filterItems.value) {
+    const index = group.items?.findIndex(i => i.id === item.id) ?? -1
+    if (index >= 0) {
+      if (group.id === item.itemIconGroupId) group.items!.splice(index, 1, item)
+      else group.items!.splice(index, 1)
+    }
+  }
+  panelState.setItemGroupCacheData(items.value)
 }
 
-function handleEditSuccess(item: Panel.ItemInfo) {
-  getList()
+function removeItemLocally(item: Panel.ItemInfo) {
+  for (const group of items.value) {
+    const index = group.items?.findIndex(i => i.id === item.id) ?? -1
+    if (index >= 0) group.items!.splice(index, 1)
+  }
+  for (const group of filterItems.value) {
+    const index = group.items?.findIndex(i => i.id === item.id) ?? -1
+    if (index >= 0) group.items!.splice(index, 1)
+  }
+  panelState.setItemGroupCacheData(items.value)
 }
+
 
 function handleChangeNetwork(mode: PanelStateNetworkModeEnum) {
   panelState.setNetworkMode(mode)
@@ -168,7 +175,7 @@ function deleteItem(itemInfo: Panel.ItemInfo) {
       deletes([itemInfo.id as number]).then(({ code, msg }) => {
         if (code === 0) {
           ms.success(t('common.deleteSuccess'))
-          getList()
+          removeItemLocally(itemInfo)
         }
         else {
           ms.error(`${t('common.deleteFail')}:${msg}`)

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { SelectOption } from 'naive-ui'
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 import { NButton, NDrawer, NDrawerContent, NSelect, NSwitch, NTabPane, NTabs, useMessage } from 'naive-ui'
 import { streamContainerLogs } from '@/api/docker/container'
 import ResourceChart from './ResourceChart.vue'
@@ -123,15 +123,17 @@ function updateWidth() {
   drawerWidth.value = window.innerWidth < 640 ? '100%' : 720
 }
 
-watch(() => [props.visible, props.containerId], ([visible]) => {
+watch(() => [props.visible, props.containerId, activeTab.value], ([visible, , tab]) => {
   updateWidth()
-  if (visible && props.containerId) {
-    activeTab.value = 'logs'
+  if (visible && props.containerId && tab === 'logs') {
     start()
   }
-  else if (!visible)
+  else {
     stop()
+  }
 })
+
+onUnmounted(stop)
 </script>
 
 <template>

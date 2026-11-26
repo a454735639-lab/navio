@@ -226,6 +226,8 @@ func (a *Container) GetContainerStatus(c *gin.Context) {
 	}
 	resp.CPUPercent = stateData.CPUPercent
 	resp.Memory = stateData.Memory
+	resp.MemoryPercent = stateData.MemoryPercent
+	resp.MemoryLimit = stateData.MemoryLimit
 	resp.Cache = stateData.Cache
 	resp.IORead = stateData.IORead
 	resp.IOWrite = stateData.IOWrite
@@ -318,6 +320,8 @@ func collectContainerState(containerID string) dockerApiStructs.ContainerStats {
 		}
 		temp.CPUPercent = stateData.CPUPercent
 		temp.Memory = stateData.Memory
+		temp.MemoryPercent = stateData.MemoryPercent
+		temp.MemoryLimit = stateData.MemoryLimit
 		temp.Cache = stateData.Cache
 		temp.IORead = stateData.IORead
 		temp.IOWrite = stateData.IOWrite
