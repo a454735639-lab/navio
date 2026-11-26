@@ -22,7 +22,7 @@ const propClass = ref(props.class)
     <!-- 详情图标 -->
     <div
       v-if="cardTypeStyle === PanelPanelConfigStyleEnum.info"
-      class="item-card-info w-full rounded-2xl transition-all duration-200 flex"
+      class="item-card-info w-full rounded-xl transition-all duration-200 flex"
       :class="propClass"
       :style="{
         'backgroundColor': backgroundColor ?? defaultBackground,
@@ -38,7 +38,7 @@ const propClass = ref(props.class)
       class="item-card-small"
     >
       <div
-        class="item-card-small-icon overflow-hidden rounded-2xl sunpanel w-[70px] h-[70px] mx-auto transition-all duration-200"
+        class="item-card-small-icon overflow-hidden rounded-xl sunpanel w-[70px] h-[70px] mx-auto transition-all duration-200"
         :class="propClass"
         :style="{
           'backgroundColor': backgroundColor ?? defaultBackground,
@@ -60,9 +60,11 @@ const propClass = ref(props.class)
 </template>
 
 <style scoped>
-.item-card-info:hover,.item-card-small-icon:hover {
-  box-shadow: 0 0 20px var(--custom-box-shadow-color,#2a2a2a6b),
-  0 0 1px 1px rgba(255, 255, 255,.1),
-  0 0 20px 5px rgba(0,0,0,.1);
+/* Pass details: 上浮 + 柔和扩散阴影，替代原来的多层 glow */
+.item-card-info:hover,
+.item-card-small-icon:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28),
+    0 0 0 1px rgba(255, 255, 255, 0.14) inset;
 }
 </style>

@@ -474,13 +474,13 @@ onUnmounted(() => {
           <div
             v-for="(itemGroup, itemGroupIndex) in filterItems" :id="`item-group-${itemGroup.onlyName}`"
             :key="itemGroupIndex"
-            class="item-list mt-[50px]"
+            class="item-list mt-[40px]"
             :class="`item-group-${itemGroup.onlyName} item-group-index-${itemGroupIndex} ${itemGroup.sortStatus ? (`border shadow-[0_0_30px_10px_rgba(0,0,0,0.3)]  p-[10px] rounded-2xl `) : ''}`"
             @mouseenter="handleSetHoverStatus(itemGroupIndex, true)"
             @mouseleave="handleSetHoverStatus(itemGroupIndex, false)"
           >
             <!-- 分组标题 -->
-            <div class="text-white text-xl font-extrabold mb-[20px] ml-[10px] flex items-center">
+            <div class="text-white text-[15px] font-semibold mb-[16px] ml-[10px] flex items-center tracking-wide">
               <span class="group-title text-shadow">
                 {{ itemGroup.title }}
               </span>
@@ -604,12 +604,12 @@ onUnmounted(() => {
 
     <!-- 悬浮按钮 -->
     <div
-      class="fixed-element bg-[#2a2a2a6b] rounded-lg shadow-[0_0_10px_2px_rgba(0,0,0,0.2)] p-[2px] flex backdrop-blur-[2px]"
+      class="fixed-element bg-[rgba(30,34,48,0.55)] rounded-xl shadow-[0_8px_28px_rgba(0,0,0,0.28)] p-[3px] flex backdrop-blur-xl border border-white/10"
     >
       <!-- 自动模式：延迟显示（与系统入口同一排，点击立即重新探测） -->
       <div
         v-if="panelState.panelConfig.netModeChangeAuto"
-        class="float-btn flex items-center justify-center text-[11px] font-bold select-none"
+        class="float-btn flex items-center justify-center text-[11px] font-semibold select-none !w-auto px-3 whitespace-nowrap"
         :title="t('apps.baseSettings.netModeChangeAuto')"
         @click="handleNetworkChange(); refreshNetStatus()"
       >
@@ -731,11 +731,11 @@ html {
 }
 
 .text-shadow {
-  text-shadow: 2px 2px 50px rgb(0, 0, 0);
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
 }
 
 .app-icon-text-shadow {
-  text-shadow: 2px 2px 5px rgb(0, 0, 0);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
 }
 
 .fixed-element {
@@ -753,15 +753,14 @@ html {
   width: 100%;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 18px;
-
+  gap: 16px;
 }
 
 .icon-small-box {
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  gap: 20px;
 
 }
 
@@ -769,13 +768,13 @@ html {
   width: 42px;
   height: 42px;
   cursor: pointer;
-  border-radius:  6px;
-  transition: background-color  0.3s;
+  border-radius: 8px;
+  transition: background-color 0.2s, transform 0.2s;
 }
 
 .float-btn:hover {
-  background-color: #a9a9a97a;
-  /* backdrop-filter:blur(10px) */
+  background-color: rgba(255, 255, 255, 0.16);
+  transform: translateY(-1px);
 }
 
 .float-btn-icon {
