@@ -60,7 +60,11 @@ const loginPost = async () => {
         name: res.data.name || '', id: res.data.id || 0,
         cToken: res.data.token, loginStatus: true,
       })
-      setTimeout(() => { loading.value = false; router.push({ path: '/' }) }, 400)
+      setTimeout(() => {
+        ms.success(`Hi ${res.data.name || form.value.username},${t('login.welcomeMessage')}`)
+        loading.value = false
+        router.push({ path: '/' })
+      }, 400)
     } else { loading.value = false }
   } catch (error) {
     if (appStore.siteSetting.isEnableLoginCaptcha) captchaRef.value.refresh()
