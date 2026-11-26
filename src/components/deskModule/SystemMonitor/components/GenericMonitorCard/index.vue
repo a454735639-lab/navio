@@ -35,7 +35,7 @@ const propClass = ref(props.class)
     >
       <template #info>
         <!-- info 模式：环形仪表居中，不预留左侧图标空间（1Panel 环形瓦片以环形为视觉主体） -->
-        <div class="w-full text-white flex items-center justify-center">
+        <div class="w-full flex items-center justify-center">
           <slot name="info" />
         </div>
       </template>

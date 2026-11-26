@@ -35,6 +35,13 @@ const iconText = computed(() => {
   return ''
 })
 const refreshInterval = 5000
+
+// 1Panel 浅色卡片风格：白底 + 蓝色环 + 深灰字 + 浅灰轨道
+const LIGHT_BG = '#ffffff'
+const LIGHT_TEXT = '#2b3245'
+const LIGHT_PROGRESS = '#3b82f6'
+const LIGHT_RAIL = '#e8edf5'
+
 </script>
 
 <template>
@@ -44,7 +51,7 @@ const refreshInterval = 5000
       :card-type-style="cardTypeStyle"
       :icon-text="extendParam?.title || iconText"
       :icon-text-color="iconTextColor"
-      :background-color="extendParam.backgroundColor"
+      :background-color="LIGHT_BG"
     >
       <template #icon>
         <!-- 图标 -->
@@ -65,25 +72,25 @@ const refreshInterval = 5000
           <CardCPU
             v-if="monitorType === MonitorType.cpu"
             :card-type-style="PanelPanelConfigStyleEnum.info"
-            :progress-color="extendParam?.progressColor"
-            :progress-rail-color="extendParam?.progressRailColor"
-            :text-color="extendParam?.color"
+            :progress-color="LIGHT_PROGRESS"
+            :progress-rail-color="LIGHT_RAIL"
+            :text-color="LIGHT_TEXT"
             :refresh-interval="refreshInterval"
           />
           <Memory
             v-else-if="monitorType === MonitorType.memory"
             :card-type-style="PanelPanelConfigStyleEnum.info"
-            :progress-color="extendParam?.progressColor"
-            :progress-rail-color="extendParam?.progressRailColor"
-            :text-color="extendParam?.color"
+            :progress-color="LIGHT_PROGRESS"
+            :progress-rail-color="LIGHT_RAIL"
+            :text-color="LIGHT_TEXT"
             :refresh-interval="refreshInterval"
           />
           <Disk
             v-else-if="monitorType === MonitorType.disk"
             :card-type-style="PanelPanelConfigStyleEnum.info"
-            :progress-color="extendParam?.progressColor"
-            :progress-rail-color="extendParam?.progressRailColor"
-            :text-color="extendParam?.color"
+            :progress-color="LIGHT_PROGRESS"
+            :progress-rail-color="LIGHT_RAIL"
+            :text-color="LIGHT_TEXT"
             :path="extendParam?.path"
             :title="extendParam?.title"
             :refresh-interval="refreshInterval"
@@ -91,9 +98,9 @@ const refreshInterval = 5000
           <Network
             v-else-if="monitorType === MonitorType.network"
             :card-type-style="PanelPanelConfigStyleEnum.info"
-            :progress-color="extendParam?.progressColor"
-            :progress-rail-color="extendParam?.progressRailColor"
-            :text-color="extendParam?.color"
+            :progress-color="LIGHT_PROGRESS"
+            :progress-rail-color="LIGHT_RAIL"
+            :text-color="LIGHT_TEXT"
             :refresh-interval="refreshInterval"
           />
         </div>
@@ -102,25 +109,25 @@ const refreshInterval = 5000
         <CardCPU
           v-if="monitorType === MonitorType.cpu"
           :card-type-style="PanelPanelConfigStyleEnum.icon"
-          :progress-color="extendParam?.progressColor"
-          :progress-rail-color="extendParam?.progressRailColor"
-          :text-color="extendParam?.color"
+          :progress-color="LIGHT_PROGRESS"
+          :progress-rail-color="LIGHT_RAIL"
+          :text-color="LIGHT_TEXT"
           :refresh-interval="refreshInterval"
         />
         <Memory
           v-else-if="monitorType === MonitorType.memory"
           :card-type-style="PanelPanelConfigStyleEnum.icon"
-          :progress-color="extendParam?.progressColor"
-          :progress-rail-color="extendParam?.progressRailColor"
-          :text-color="extendParam?.color"
+          :progress-color="LIGHT_PROGRESS"
+          :progress-rail-color="LIGHT_RAIL"
+          :text-color="LIGHT_TEXT"
           :refresh-interval="refreshInterval"
         />
         <Disk
           v-else-if="monitorType === MonitorType.disk"
           :card-type-style="PanelPanelConfigStyleEnum.icon"
-          :progress-color="extendParam?.progressColor"
-          :progress-rail-color="extendParam?.progressRailColor"
-          :text-color="extendParam?.color"
+          :progress-color="LIGHT_PROGRESS"
+          :progress-rail-color="LIGHT_RAIL"
+          :text-color="LIGHT_TEXT"
           :path="extendParam?.path"
           :title="extendParam?.title"
           :refresh-interval="refreshInterval"
@@ -128,9 +135,9 @@ const refreshInterval = 5000
         <Network
           v-else-if="monitorType === MonitorType.network"
           :card-type-style="PanelPanelConfigStyleEnum.icon"
-          :progress-color="extendParam?.progressColor"
-          :progress-rail-color="extendParam?.progressRailColor"
-          :text-color="extendParam?.color"
+          :progress-color="LIGHT_PROGRESS"
+          :progress-rail-color="LIGHT_RAIL"
+          :text-color="LIGHT_TEXT"
           :refresh-interval="refreshInterval"
         />
       </template>
