@@ -158,8 +158,7 @@ async function updateItemIconGroupByNet(itemIconGroupIndex: number, itemIconGrou
   }
   catch (error) { apiRespErrMsg(error) }
 }
-
-
+function removeItemLocally(item: Panel.ItemInfo) {
   for (const group of items.value) {
     const index = group.items?.findIndex(i => i.id === item.id) ?? -1
     if (index >= 0) group.items!.splice(index, 1)
