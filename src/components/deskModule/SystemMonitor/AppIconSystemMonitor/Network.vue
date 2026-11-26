@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { NPopover } from 'naive-ui'
 import { PanelPanelConfigStyleEnum } from '@/enums'
 import { getNetworkState } from '@/api/system/systemMonitor'
+import Sparkline from '../components/Sparkline/index.vue'
 
 interface Prop {
   cardTypeStyle: PanelPanelConfigStyleEnum
@@ -16,9 +17,18 @@ const props = defineProps<Prop>()
 let timer: any
 const netState = ref<SystemMonitor.NetworkInfo | null>(null)
 const speed = ref({ rx: 0, tx: 0 })
+// 双线趋势：上传(progressColor) + 下载(橙)，统一刻度归一化
+const txHistory = ref<number[]>([])
+const rxHistory = ref<number[]>([])
+const RX_COLOR = '#f0883e'
 let lastRx = 0
 let lastTx = 0
 let lastTime = 0
+
+const netMax = computed(() => {
+  const m = Math.max(...txHistory.value, ...rxHistory.value, 0)
+  return m > 0 ? m : 1
+})
 
 function formatSpeed(bytesPerSec: number): string {
   if (bytesPerSec < 1024)
@@ -57,6 +67,13 @@ function calcSpeed(curRx: number, curTx: number) {
   lastRx = curRx
   lastTx = curTx
   lastTime = now
+  // 记录趋势（30 点滑动窗口）
+  txHistory.value.push(speed.value.tx)
+  rxHistory.value.push(speed.value.rx)
+  if (txHistory.value.length > 30) {
+    txHistory.value.shift()
+    rxHistory.value.shift()
+  }
 }
 
 async function getData() {
@@ -85,41 +102,48 @@ onUnmounted(() => {
 <template>
   <NPopover trigger="click">
     <template #trigger>
-      <!-- 详情风格 -->
+      <!-- 详情风格：大号 ↑↓ + 双线趋势 -->
       <div v-if="cardTypeStyle === PanelPanelConfigStyleEnum.info" class="w-full">
-        <div class="mb-1 text-xs flex justify-between" :style="{ color: textColor }">
-          <span>NET</span>
-          <span>↑{{ formatSpeed(speed.tx) }} ↓{{ formatSpeed(speed.rx) }}</span>
+        <div class="flex justify-between items-baseline mb-[4px]" :style="{ color: textColor }">
+          <span class="text-xs font-medium">NET</span>
+          <span class="text-xs">
+            <span :style="{ color: progressColor }">↑{{ formatSpeed(speed.tx) }}</span>
+            <span class="ml-2" :style="{ color: RX_COLOR }">↓{{ formatSpeed(speed.rx) }}</span>
+          </span>
+        </div>
+        <div class="relative w-full" style="height: 30px;">
+          <Sparkline :data="txHistory" :color="progressColor" :max="netMax" :height="30" class="absolute inset-0" />
+          <Sparkline :data="rxHistory" :color="RX_COLOR" :max="netMax" :height="30" class="absolute inset-0" />
         </div>
       </div>
-      <!-- 图标风格 -->
+      <!-- 图标风格：竖排数字（空间小不加趋势） -->
       <div v-else class="w-full flex flex-col justify-center items-center h-full mt-3 gap-[2px]">
-        <div style="font-size: 9px;" :style="{ color: textColor }">
+        <div style="font-size: 9px;" :style="{ color: progressColor }">
           ↑{{ formatSpeed(speed.tx) }}
         </div>
-        <div style="font-size: 9px;" :style="{ color: textColor }">
+        <div style="font-size: 9px;" :style="{ color: RX_COLOR }">
           ↓{{ formatSpeed(speed.rx) }}
         </div>
       </div>
     </template>
 
-    <div class="text-sm min-w-[160px]">
-      <div class="mb-2">
+    <div class="text-sm min-w-[200px]">
+      <div class="mb-2 flex justify-between">
         <span class="opacity-70">{{ $t('deskModule.systemMonitor.upload') }}</span>
-        <span class="ml-2 font-bold">{{ formatSpeed(speed.tx) }}</span>
+        <span class="font-bold" :style="{ color: progressColor }">{{ formatSpeed(speed.tx) }}</span>
       </div>
-      <div class="mb-2">
+      <div class="mb-2 flex justify-between">
         <span class="opacity-70">{{ $t('deskModule.systemMonitor.download') }}</span>
-        <span class="ml-2 font-bold">{{ formatSpeed(speed.rx) }}</span>
+        <span class="font-bold" :style="{ color: RX_COLOR }">{{ formatSpeed(speed.rx) }}</span>
       </div>
       <div class="border-t border-current/10 pt-2 mt-2 opacity-80">
-        <div>
+        <div class="flex justify-between">
           <span class="opacity-70">{{ $t('deskModule.systemMonitor.totalSent') }}</span>
-          <span class="ml-2">{{ formatBytes(netState?.txBytes || 0) }}</span>
+          <span>{{ formatBytes(netState?.txBytes || 0) }}</span>
         </div>
-        <div>
+        <div class="flex justify-between">
           <span class="opacity-70">{{ $t('deskModule.systemMonitor.totalRecv') }}</span>
-          <span class="ml-2">{{ formatBytes(netState?.rxBytes || 0) }}</span>
+          <span>{{ formatBytes(netState?.rxBytes || 0) }}</span>
         </div>
       </div>
     </div>
