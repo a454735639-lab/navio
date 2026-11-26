@@ -11,6 +11,8 @@ const props = defineProps<{
   value: Docker.Container.Info
 }>()
 
+const emit = defineEmits(['openLogs'])
+
 const dockerState = useDockerStore()
 const data = ref(props.value)
 const ms = useMessage()
@@ -117,5 +119,8 @@ const switchValue = computed({
       </template>
       {{ t('iconItem.dockerAction.restartConfirm') }}
     </NPopconfirm>
+    <NButton size="tiny" @click="emit('openLogs')">
+      {{ t('apps.dockerManage.viewLogs') }}
+    </NButton>
   </div>
 </template>

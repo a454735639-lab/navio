@@ -151,7 +151,18 @@
       "restarting": "重启中",
       "running": "运行中",
       "state": "状态",
-      "unknown": "未知"
+      "unknown": "未知",
+      "viewLogs": "查看日志",
+      "logs": "日志",
+      "follow": "跟随",
+      "tailLines": "行数",
+      "clearLog": "清空",
+      "downloadLog": "下载",
+      "connected": "已连接",
+      "disconnected": "已断开",
+      "logError": "日志加载失败",
+      "emptyLog": "暂无日志",
+      "noContainerId": "缺少容器 ID"
     },
     "exportImport": {
       "appName": "导出导入",

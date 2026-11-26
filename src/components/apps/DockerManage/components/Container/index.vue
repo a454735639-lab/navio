@@ -4,6 +4,7 @@ import { NAlert, NDataTable, NEllipsis, NTag } from 'naive-ui'
 import type { DataTableColumns } from 'naive-ui'
 import type { ComponentPublicInstance } from 'vue'
 import { useDockerStore } from '../../store/docker'
+import LogViewer from './LogViewer.vue'
 import { RowAction, RowName } from './table'
 import { DockerContainerInfoState } from '@/enums/docker'
 import { t } from '@/locales'
@@ -24,6 +25,17 @@ const alertBoxRef = ref<HTMLElement | ComponentPublicInstance | null>(null)
 const editItemInfo = ref<Panel.Info | null>(null)
 const editItemInfoShow = ref(false)
 
+// 容器日志抽屉
+const logDrawerVisible = ref(false)
+const logContainerName = ref('')
+const logContainerId = ref('')
+
+function openLogDrawer(row: Docker.Container.Info) {
+  logContainerName.value = row.name
+  logContainerId.value = row.id
+  logDrawerVisible.value = true
+}
+
 const createColumns = ({
   sendMail,
 }: {
@@ -33,7 +45,7 @@ const createColumns = ({
     {
       title: t('apps.dockerManage.containerName'),
       key: 'name',
-      minWidth: 150,
+      minWidth: 140,
       sorter: 'default',
       render(row) {
         return h(
@@ -112,7 +124,7 @@ const createColumns = ({
     {
       title: t('apps.dockerManage.resourceOverview'),
       key: 'resource',
-      width: 130,
+      width: 110,
       render(row) {
         const status = dockerState.containerRuningStats[row.id]
         let cpu = ''
@@ -152,7 +164,7 @@ const createColumns = ({
     {
       title: t('apps.dockerManage.ports'),
       key: 'port',
-      width: 120,
+      width: 100,
       render(row) {
         const c = []
         for (const key in row.ports) {
@@ -186,13 +198,14 @@ const createColumns = ({
       },
       key: 'action',
       fixed: 'right',
-      width: 150,
+      width: 200,
       align: 'center',
       render(row) {
         return h(
           RowAction,
           {
             value: row,
+            onOpenLogs: () => openLogDrawer(row),
           },
         )
       },
@@ -340,6 +353,8 @@ onUnmounted(() => {
     </div>
 
     <EditItem v-model:visible="editItemInfoShow" :item-info="editItemInfo" is-out-add @done="handleEditSuccess" />
+
+    <LogViewer v-model:visible="logDrawerVisible" :container-name="logContainerName" :container-id="logContainerId" />
   </div>
 </template>
 

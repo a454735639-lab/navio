@@ -20,6 +20,8 @@ func InitContainer(router *gin.RouterGroup) {
 		r.POST("/docker/container/restartContainer", apiDocker.Container.RestartContainer)
 		r.POST("/docker/container/getContainerStates", apiDocker.Container.GetContainerStates)
 		r.POST("/docker/container/getContainerIDByName", apiDocker.Container.GetContainerIDByName)
+		// 流式日志（SSE）。前端用 fetch+ReadableStream 读取以携带 token header。
+		r.GET("/docker/container/logs", apiDocker.Container.StreamLogs)
 	}
 
 	// 公开模式（仅可以获取容器的状态）

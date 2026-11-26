@@ -151,7 +151,18 @@
       "restarting": "Restarting",
       "running": "Running",
       "state": "State",
-      "unknown": "unknown"
+      "unknown": "unknown",
+      "viewLogs": "Logs",
+      "logs": "Logs",
+      "follow": "Follow",
+      "tailLines": "Lines",
+      "clearLog": "Clear",
+      "downloadLog": "Download",
+      "connected": "Connected",
+      "disconnected": "Disconnected",
+      "logError": "Failed to load logs",
+      "emptyLog": "No logs yet",
+      "noContainerId": "Missing container ID"
     },
     "exportImport": {
       "appName": "Export/Import",
