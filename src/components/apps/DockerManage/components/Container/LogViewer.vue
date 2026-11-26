@@ -24,6 +24,7 @@ const errMsg = ref('')
 const logBox = ref<HTMLElement | null>(null)
 const tail = ref('200')
 let abortFn: (() => void) | null = null
+let streamGen = 0
 
 const drawerWidth = ref<number | string>(720)
 
@@ -63,15 +64,21 @@ function start() {
   }
   loading.value = true
   connected.value = true
+  const gen = ++streamGen
   abortFn = streamContainerLogs(
     { id: props.containerId, follow: true, tail: tail.value },
     handleLine,
     (msg) => {
+      if (gen !== streamGen)
+        return
       errMsg.value = msg
       connected.value = false
       loading.value = false
     },
     () => {
+      // 仅当仍是当前流时才更新状态；被 abort 的旧流回调直接忽略
+      if (gen !== streamGen)
+        return
       connected.value = false
       loading.value = false
     },
@@ -79,6 +86,7 @@ function start() {
 }
 
 function stop() {
+  streamGen++ // 使旧流回调失效，避免被 abort 的旧流误置 connected=false
   if (abortFn) {
     abortFn()
     abortFn = null
@@ -113,21 +121,12 @@ function updateWidth() {
   drawerWidth.value = window.innerWidth < 640 ? '100%' : 720
 }
 
-watch(() => props.visible, (v) => {
-  if (v)
+watch(() => [props.visible, props.containerId], ([visible]) => {
+  updateWidth()
+  if (visible && props.containerId)
     start()
-  else
+  else if (!visible)
     stop()
-})
-
-watch(() => props.containerId, () => {
-  if (props.visible)
-    start()
-})
-
-watch(() => props.visible, (v) => {
-  if (v)
-    updateWidth()
 })
 </script>
 
