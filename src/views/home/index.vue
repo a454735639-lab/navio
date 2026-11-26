@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { VueDraggable } from 'vue-draggable-plus'
 import { NBackTop, NButton, useDialog, useMessage } from 'naive-ui'
-import { nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { AppStarter, EditItem, ItemCards } from './components'
 import { AccountSwitcher, Clock, SearchBox, SystemMonitor } from '@/components/deskModule'
 import { Loading, SvgIcon } from '@/components/common'
@@ -142,7 +142,24 @@ function replaceItemLocally(item: Panel.ItemInfo) {
   panelState.setItemGroupCacheData(items.value)
 }
 
-function removeItemLocally(item: Panel.ItemInfo) {
+function handleEditSuccess(item: Panel.ItemInfo) {
+  replaceItemLocally(item)
+}
+
+// Keep drag-sort refresh scoped to the affected group.
+async function updateItemIconGroupByNet(itemIconGroupIndex: number, itemIconGroupId: number) {
+  try {
+    const res = await getListByGroupId<Common.ListResponse<Panel.ItemInfo[]>>(itemIconGroupId)
+    if (res.code === 0 && items.value[itemIconGroupIndex]) {
+      items.value[itemIconGroupIndex].items = res.data.list
+      if (!appStore.siteSetting.isDisableItemCardCache)
+        panelState.setItemGroupCacheData(items.value)
+    }
+  }
+  catch (error) { apiRespErrMsg(error) }
+}
+
+
   for (const group of items.value) {
     const index = group.items?.findIndex(i => i.id === item.id) ?? -1
     if (index >= 0) group.items!.splice(index, 1)
