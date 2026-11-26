@@ -100,7 +100,7 @@ watch(() => [props.active, props.containerId], ([active]) => {
     start()
   else
     stop()
-})
+}, { immediate: true })
 
 onUnmounted(stop)
 </script>
