@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NCard, NCheckbox, NForm, NFormItem, NInput, NSelect, NSwitch, useMessage, useOsTheme } from 'naive-ui'
+import { NButton, NCheckbox, NForm, NFormItem, NInput, NSelect, NSwitch, useMessage, useOsTheme } from 'naive-ui'
 import type { InputInst } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
@@ -41,7 +41,6 @@ const form = ref<Login.LoginReqest>({
   rememberMe: false,
 })
 
-// 记住账号：勾选时把用户名存 localStorage，下次自动带出
 const REMEMBER_KEY = 'navio_remember_username'
 const savedUsername = localStorage.getItem(REMEMBER_KEY)
 if (savedUsername && !defaultUsername.value) {
@@ -147,50 +146,51 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="login-page">
-    <div class="background" :style="{ backgroundImage: `url('${appStore.siteSetting.loginBackgroundUrl}')` }" />
+  <div class="login-page" :class="{ 'is-dark': isDark }">
+    <!-- 背景 -->
+    <div class="bg-image" :style="{ backgroundImage: `url('${appStore.siteSetting.loginBackgroundUrl}')` }" />
+    <div class="bg-veil" />
+    <div class="bg-blob blob-a" />
+    <div class="bg-blob blob-b" />
 
-    <!-- 顶部工具条：主题 + 语言，不再占用卡片内部空间 -->
+    <!-- 工具栏 -->
     <div class="toolbar">
-      <div class="toolbar-item">
-        <NSwitch v-model:value="isDark" @update:value="handleTheme">
-          <template #checked-icon>
-            <SvgIcon icon="mingcute:moon-fog-line" />
-          </template>
-          <SvgIcon icon="tabler-sun-filled" />
-          <template #unchecked-icon>
-            <SvgIcon icon="mingcute:sun-fog-line" />
-          </template>
-        </NSwitch>
-      </div>
-      <div class="toolbar-item flex items-center gap-2">
-        <SvgIcon icon="flowbite-language-outline" class="language-text-style" />
-        <NSelect
-          v-model:value="languageValue" size="small" :options="languageOptions"
-          class="!w-[100px]" @update:value="handleChangeLanuage"
-        />
-      </div>
+      <NSwitch v-model:value="isDark" size="small" @update:value="handleTheme">
+        <template #checked-icon>
+          <SvgIcon icon="mingcute:moon-fog-line" />
+        </template>
+        <SvgIcon icon="tabler-sun-filled" />
+        <template #unchecked-icon>
+          <SvgIcon icon="mingcute:sun-fog-line" />
+        </template>
+      </NSwitch>
+      <NSelect
+        v-model:value="languageValue" size="tiny" :options="languageOptions"
+        class="lang-select" @update:value="handleChangeLanuage"
+      />
     </div>
 
-    <div class="login-container">
-      <NCard class="login-card" style="border-radius: 24px">
-        <!-- 品牌区 -->
+    <!-- 登录卡片 -->
+    <div class="card-wrap">
+      <div class="card">
         <div class="brand">
-          <div class="brand-icon">
-            <SvgIcon icon="mdi:compass-outline" />
+          <div class="logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9" />
+              <path d="m15.5 8.5-2.1 5-5 2.1 2.1-5 5-2.1Z" />
+            </svg>
           </div>
-          <div class="brand-text">
-            <div class="brand-name">{{ t('common.appName') }}</div>
-            <div class="brand-sub">{{ t('login.brandSubtitle') }}</div>
-          </div>
+          <div class="brand-name">{{ t('common.appName') }}</div>
+          <div class="brand-sub">{{ t('login.brandSubtitle') }}</div>
         </div>
 
-        <div class="login-title">{{ appStore.siteSetting.title }}</div>
+        <div class="rule"><span>{{ t('login.signInTitle') }}</span></div>
 
         <NForm :model="form" @keydown.enter="handleEnterDown">
-          <NFormItem>
+          <NFormItem :show-label="false" class="field">
             <NInput
               v-model:value="form.username" size="large" :placeholder="$t('login.usernamePlaceholder')" clearable
+              class="field-input"
             >
               <template #prefix>
                 <SvgIcon icon="ph:user-bold" />
@@ -198,31 +198,31 @@ onMounted(() => {
             </NInput>
           </NFormItem>
 
-          <NFormItem>
+          <NFormItem :show-label="false" class="field">
             <NInput
-              ref="inputpasswordRef" v-model:value="form.password" :type="showPassword ? 'text' : 'password'"
-              :placeholder="$t('login.passwordPlaceholder')"
+              ref="inputpasswordRef" v-model:value="form.password" size="large"
+              :type="showPassword ? 'text' : 'password'" :placeholder="$t('login.passwordPlaceholder')"
+              class="field-input"
             >
               <template #prefix>
                 <SvgIcon icon="mdi:password-outline" />
               </template>
               <template #suffix>
-                <SvgIcon
-                  :icon="showPassword ? 'mdi:eye-outline' : 'mdi:eye-off-outline'" class="cursor-pointer"
-                  @click="showPassword = !showPassword"
-                />
+                <span class="eye" @click="showPassword = !showPassword">
+                  <SvgIcon :icon="showPassword ? 'mdi:eye-outline' : 'mdi:eye-off-outline'" />
+                </span>
               </template>
             </NInput>
           </NFormItem>
 
-          <NFormItem v-if="appStore.siteSetting.isEnableLoginCaptcha">
+          <NFormItem v-if="appStore.siteSetting.isEnableLoginCaptcha" :show-label="false" class="field">
             <div class="captcha-row">
-              <div class="captcha-box">
+              <div class="captcha-box" @click="captchaRef?.refresh?.()">
                 <Captcha ref="captchaRef" src="/api/captcha/getImage" />
               </div>
               <NInput
                 v-model:value="form.vcode" size="large" :placeholder="$t('login.captchaPlaceholder')"
-                class="captcha-input"
+                class="field-input"
               >
                 <template #prefix>
                   <SvgIcon icon="mdi:shield-lock-outline" />
@@ -231,20 +231,23 @@ onMounted(() => {
             </div>
           </NFormItem>
 
-          <NFormItem :show-feedback="false">
+          <div class="options">
             <NCheckbox v-if="route.query.type !== 'addLogin'" :checked="form.rememberMe" size="small" @update:checked="handleRememberChange">
               {{ $t('login.rememberAccount') }}
             </NCheckbox>
-          </NFormItem>
+          </div>
 
           <NButton
-            type="primary" size="large" block :loading="loading" class="login-submit"
+            type="primary" size="large" block :loading="loading" class="submit"
             @click="loginPost"
           >
-            {{ $t('login.loginBtn') }}
+            <span class="submit-label">{{ $t('login.loginButton') }}</span>
+            <SvgIcon icon="mdi:arrow-right" class="submit-arrow" />
           </NButton>
         </NForm>
-      </NCard>
+
+        <div class="card-foot">{{ $t('login.selfHosted') }}</div>
+      </div>
     </div>
   </div>
 </template>
@@ -256,111 +259,123 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  background: #eef2f9;
+  color: #1f2740;
+}
+.login-page.is-dark {
+  background: #0d1220;
+  color: #e7ecf6;
 }
 
-.background {
+.bg-image {
   position: absolute;
-  inset: 0;
+  inset: -24px;
   background-size: cover;
   background-position: center;
-  filter: blur(12px) brightness(0.7);
+  filter: blur(18px) saturate(120%);
+  transform: scale(1.06);
+  opacity: .55;
 }
+.is-dark .bg-image { opacity: .3; filter: blur(18px) saturate(120%) brightness(.6); }
+
+.bg-veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(99,102,241,.28), rgba(56,189,248,.18) 45%, rgba(255,255,255,.5));
+}
+.is-dark .bg-veil {
+  background: linear-gradient(135deg, rgba(49,46,129,.55), rgba(8,47,73,.5) 45%, rgba(13,18,32,.85));
+}
+
+.bg-blob { position: absolute; border-radius: 50%; filter: blur(70px); opacity: .45; }
+.blob-a { width: 380px; height: 380px; background: #7c8cff; top: -120px; left: -100px; }
+.blob-b { width: 320px; height: 320px; background: #67e8f9; bottom: -120px; right: -80px; }
+.is-dark .bg-blob { opacity: .22; }
 
 .toolbar {
   position: absolute;
-  top: 24px;
-  right: 28px;
-  display: flex;
-  gap: 18px;
-  z-index: 2;
-}
-
-.toolbar-item {
-  display: flex;
-  align-items: center;
-}
-
-.language-text-style {
-  width: 22px;
-  height: 22px;
-  color: #fff;
-  opacity: 0.85;
-}
-
-.login-container {
-  position: relative;
-  z-index: 1;
-  width: min(400px, 92vw);
-  padding: 8px;
-}
-
-.login-card {
-  padding: 34px 30px 28px !important;
-}
-
-.brand {
+  top: 22px;
+  right: 26px;
+  z-index: 3;
   display: flex;
   align-items: center;
   gap: 14px;
-  margin-bottom: 22px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.55);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 6px 22px rgba(31,39,64,.08);
+}
+.is-dark .toolbar { background: rgba(255,255,255,.08); box-shadow: 0 6px 22px rgba(0,0,0,.25); }
+.lang-select { width: 96px; }
+
+.card-wrap { position: relative; z-index: 2; width: min(420px, 92vw); }
+
+.card {
+  padding: 40px 36px 28px;
+  border-radius: 24px;
+  background: rgba(255,255,255,.72);
+  border: 1px solid rgba(255,255,255,.85);
+  backdrop-filter: blur(22px) saturate(150%);
+  box-shadow: 0 24px 60px rgba(31,39,64,.16), inset 0 1px 0 rgba(255,255,255,.9);
+}
+.is-dark .card {
+  background: rgba(24,31,51,.66);
+  border-color: rgba(255,255,255,.1);
+  box-shadow: 0 24px 60px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06);
 }
 
-.brand-icon {
-  width: 46px;
-  height: 46px;
-  border-radius: 13px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 26px;
+.brand { text-align: center; margin-bottom: 22px; }
+.logo {
+  width: 58px; height: 58px; margin: 0 auto 14px;
+  border-radius: 18px;
+  display: flex; align-items: center; justify-content: center;
   color: #fff;
-  background: linear-gradient(135deg, #3b82f6, #6366f1);
-  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.35);
-  flex-shrink: 0;
+  background: linear-gradient(140deg, #6d7cff, #4f46e5 60%, #38bdf8);
+  box-shadow: 0 12px 26px rgba(79,70,229,.38), inset 0 1px 0 rgba(255,255,255,.4);
 }
+.logo svg { width: 30px; height: 30px; }
+.brand-name { font-size: 24px; font-weight: 800; letter-spacing: .5px; }
+.brand-sub { font-size: 12px; opacity: .62; margin-top: 5px; }
 
-.brand-name {
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
+.rule {
+  display: flex; align-items: center; gap: 12px;
+  margin: 4px 0 22px;
+  font-size: 12px; opacity: .55;
 }
+.rule::before, .rule::after { content: ''; flex: 1; height: 1px; background: currentColor; opacity: .28; }
 
-.brand-sub {
-  font-size: 12px;
-  opacity: 0.6;
-  margin-top: 2px;
-}
+.field { margin-bottom: 16px; }
+.field-input :deep(.n-input) { border-radius: 12px; }
+.eye { display: inline-flex; cursor: pointer; opacity: .6; }
+.eye:hover { opacity: 1; }
 
-.login-title {
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 22px;
-  text-align: center;
-}
-
-.captcha-row {
-  display: flex;
-  gap: 12px;
-  width: 100%;
-  align-items: center;
-}
-
+.captcha-row { display: flex; gap: 12px; width: 100%; align-items: center; }
 .captcha-box {
-  width: 124px;
-  height: 40px;
-  border: 1px solid #d9d9d9;
-  border-radius: 8px;
-  overflow: hidden;
-  flex-shrink: 0;
-  cursor: pointer;
+  width: 116px; height: 40px; flex-shrink: 0; cursor: pointer;
+  border-radius: 12px; overflow: hidden;
+  border: 1px solid rgba(127,140,180,.35);
 }
+.captcha-row .field-input { flex: 1; }
 
-.captcha-input {
-  flex: 1;
+.options { display: flex; align-items: center; height: 24px; margin: 2px 0 14px; }
+
+.submit {
+  height: 46px;
+  border-radius: 12px;
+  font-weight: 700;
+  background: linear-gradient(120deg, #5b6cff, #4f46e5);
+  box-shadow: 0 10px 22px rgba(79,70,229,.3);
+  position: relative;
 }
+.submit-label { transition: transform .15s ease; }
+.submit-arrow { position: absolute; right: 18px; font-size: 18px; opacity: .85; }
 
-.login-submit {
-  margin-top: 6px;
-  font-weight: 600;
+.card-foot { text-align: center; font-size: 11px; opacity: .45; margin-top: 20px; }
+
+@media (max-width: 480px) {
+  .card { padding: 32px 24px 24px; }
+  .toolbar { top: 14px; right: 14px; }
 }
 </style>

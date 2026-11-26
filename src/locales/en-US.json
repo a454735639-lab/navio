@@ -493,7 +493,9 @@
     "rememberAccount": "Remember account",
     "loginBtn": "Sign in",
     "visitPublic": "Public mode",
-    "captchaPlaceholder": "Enter captcha"
+    "captchaPlaceholder": "Enter captcha",
+    "signInTitle": "Sign in to continue",
+    "selfHosted": "Secure · Private · Self-hosted"
   },
   "panelHome": {
     "changeToLanModel": "Switch Sun-Panel to the internal network environment",

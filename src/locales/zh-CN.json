@@ -493,7 +493,9 @@
     "rememberAccount": "记住账号",
     "loginBtn": "登录",
     "visitPublic": "访客模式",
-    "captchaPlaceholder": "请输入验证码"
+    "captchaPlaceholder": "请输入验证码",
+    "signInTitle": "登录以继续",
+    "selfHosted": "安全 · 私密 · 自托管"
   },
   "panelHome": {
     "changeToLanModel": "将 Sun-Panel 切换为内网环境",
