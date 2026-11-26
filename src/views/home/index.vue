@@ -88,9 +88,6 @@ async function getList() {
     // 内外网自动识别：先把内网可达性探出来，点击卡片时直接命中缓存
     warmupNetworkMode(collectLanUrls(data.list), panelState.panelConfig.netModeChangeAutoMaxPingMs)
 
-    // 卡片在线状态：并发探测（结果缓存 60s）
-    nextTick(() => refreshAlive())
-
     const getAllGroupList = async () => {
       for (let i = 0; i < data.list.length; i++) {
         const element = data.list[i]
@@ -115,6 +112,9 @@ async function getList() {
     getAllGroupList().then(() => {
       // console.log('全部完毕')
       filterItems.value = items.value
+
+      // 卡片在线状态：等分组与卡片全部加载完再探测（结果缓存 60s）
+      refreshAlive()
 
       // 未禁用缓存将保存为缓存数据
       if (appStore.siteSetting.isDisableItemCardCache === false) {
