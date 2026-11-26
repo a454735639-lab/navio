@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { VueDraggable } from 'vue-draggable-plus'
 import { NBackTop, NButton, useDialog, useMessage } from 'naive-ui'
-import { nextTick, onMounted, onUnmounted, provide, ref } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { AppStarter, EditItem, ItemCards } from './components'
 import { AccountSwitcher, Clock, SearchBox, SystemMonitor } from '@/components/deskModule'
 import { Loading, SvgIcon } from '@/components/common'
@@ -10,7 +10,7 @@ import { getList as getGroupList } from '@/api/panel/itemIconGroup'
 import { apiRespErrMsg, setTitle, updateLocalUserInfo } from '@/utils/cmn'
 import { useTriggerUpdateItemData } from '@/hooks/useTriggerUpdateItemData'
 import { getSiteStting } from '@/api/openness'
-import { checkItemsAlive, clearNetworkCache, clearRoleProbeCache, getNetworkStatus, probeRole, warmupNetworkMode } from './components/ItemCards/common'
+import { clearNetworkCache, clearRoleProbeCache, getNetworkStatus, probeRole, warmupNetworkMode } from './components/ItemCards/common'
 import { defaultSetting } from '@/store/modules/app/helper'
 
 import { useAccountManagerStore, useAppStore, useAuthStore, usePanelState } from '@/store'
@@ -112,10 +112,6 @@ async function getList() {
     getAllGroupList().then(() => {
       // console.log('全部完毕')
       filterItems.value = items.value
-
-      // 卡片在线状态：开关开启时才探测，避免默认拖慢页面
-      if (panelState.panelConfig.cardAliveDotShow)
-        refreshAlive()
 
       // 未禁用缓存将保存为缓存数据
       if (appStore.siteSetting.isDisableItemCardCache === false) {
@@ -276,27 +272,6 @@ function handleVisibilityChange() {
 // 网络状态变化 / 页面回到前台时，清缓存并重新判定
 let networkTimer: ReturnType<typeof setInterval> | undefined
 let statusTimer: ReturnType<typeof setInterval> | undefined
-
-/** 卡片可用性：id -> 是否可达（undefined = 未探测/未知） */
-const aliveMap = ref<Map<number, boolean>>(new Map())
-provide('aliveMap', aliveMap)
-
-async function refreshAlive() {
-  const all: { id?: number, url?: string, lanUrl?: string }[] = []
-  for (const group of items.value || []) {
-    for (const it of group.items || [])
-      all.push(it as any)
-  }
-  if (all.length === 0)
-    return
-  try {
-    const res = await checkItemsAlive(all, 2000, 30)
-    aliveMap.value = res
-  }
-  catch {
-    // 探测失败不影响主流程
-  }
-}
 
 const netStatus = ref(getNetworkStatus())
 

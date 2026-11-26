@@ -131,9 +131,7 @@
       "topMargin": "Top margin",
       "uploadOrDragText": "Click to upload or drag and drop into the box to replace the image",
       "vague": "Blur",
-      "wallpaper": "Wallpaper",
-      "cardAliveDot": "Card status dot",
-      "cardAliveDotTip": "Show a reachability dot on each card (extra probe requests)"
+      "wallpaper": "Wallpaper"
     },
     "common": {
       "notFound": "Sorry, the application failed to load. Please try refreshing the page or clearing the browser cache."
