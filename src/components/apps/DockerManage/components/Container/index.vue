@@ -33,7 +33,7 @@ const createColumns = ({
     {
       title: t('apps.dockerManage.containerName'),
       key: 'name',
-      minWidth: 200,
+      minWidth: 150,
       sorter: 'default',
       render(row) {
         return h(
@@ -49,7 +49,7 @@ const createColumns = ({
       title: t('apps.dockerManage.state'),
       align: 'center',
       key: 'state',
-      width: 90,
+      width: 80,
       sorter: 'default',
       render(row) {
         const tagArg: {
@@ -112,7 +112,7 @@ const createColumns = ({
     {
       title: t('apps.dockerManage.resourceOverview'),
       key: 'resource',
-      width: 160,
+      width: 130,
       render(row) {
         const status = dockerState.containerRuningStats[row.id]
         let cpu = ''
@@ -152,7 +152,7 @@ const createColumns = ({
     {
       title: t('apps.dockerManage.ports'),
       key: 'port',
-      width: 150,
+      width: 120,
       render(row) {
         const c = []
         for (const key in row.ports) {
@@ -186,7 +186,7 @@ const createColumns = ({
       },
       key: 'action',
       fixed: 'right',
-      width: 160,
+      width: 150,
       align: 'center',
       render(row) {
         return h(
@@ -200,7 +200,7 @@ const createColumns = ({
     {
       key: 'add',
       fixed: 'right',
-      width: 50,
+      width: 44,
       align: 'center',
       render(row) {
         return h('div', {
@@ -334,7 +334,7 @@ onUnmounted(() => {
           :bordered="false"
           size="small" :data="dockerState.containerList"
           :columns="columns" :loading="loadingList"
-          :scroll-x="808"
+          :scroll-x="674"
         />
       </div>
     </div>
