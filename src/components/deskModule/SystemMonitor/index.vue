@@ -188,13 +188,13 @@ function handleRightMenuSelect(key: string | number) {
 <template>
   <div class="system-monitor w-full">
     <div
-      class="mt-[50px]"
-      :class="monitorGroup.sortStatus ? 'border shadow-[0_0_30px_10px_rgba(0,0,0,0.3)]  p-[10px] rounded-2xl' : ''"
+      class="mt-0"
+      :class="monitorGroup.sortStatus ? 'border border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.25)] p-[10px] rounded-2xl' : ''"
       @mouseenter="handleSetHoverStatus(true)"
       @mouseleave="handleSetHoverStatus(false)"
     >
       <!-- 分组标题 -->
-      <div class="system-monitor-header text-white text-xl font-extrabold mb-[20px] ml-[10px] flex items-center">
+      <div class="system-monitor-header text-white text-[15px] font-semibold tracking-wide mb-[14px] ml-[10px] flex items-center">
         <span v-if="showTitle" class="text-shadow">
           {{ $t('deskModule.systemMonitor.systemState') }}
         </span>
@@ -290,32 +290,30 @@ function handleRightMenuSelect(key: string | number) {
 
 <style scoped>
 .text-shadow {
-  text-shadow: 2px 2px 50px rgb(0, 0, 0);
+  text-shadow: 0 2px 12px rgba(0, 0, 0, .45);
 }
 
 .app-icon-text-shadow {
-  text-shadow: 2px 2px 5px rgb(0, 0, 0);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
 }
 
 .icon-info-box {
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 18px;
-
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
 }
 
 .icon-small-box {
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
-  gap: 18px;
-
+  grid-template-columns: repeat(auto-fit, minmax(75px, 1fr));
+  gap: 16px;
 }
 
 @media (max-width: 500px) {
   .icon-info-box{
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   }
 }
 </style>

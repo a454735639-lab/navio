@@ -33,7 +33,7 @@ const createColumns = ({
     {
       title: t('apps.dockerManage.containerName'),
       key: 'name',
-      minWidth: 300,
+      minWidth: 200,
       sorter: 'default',
       render(row) {
         return h(
@@ -49,7 +49,7 @@ const createColumns = ({
       title: t('apps.dockerManage.state'),
       align: 'center',
       key: 'state',
-      width: 100,
+      width: 90,
       sorter: 'default',
       render(row) {
         const tagArg: {
@@ -112,7 +112,7 @@ const createColumns = ({
     {
       title: t('apps.dockerManage.resourceOverview'),
       key: 'resource',
-      width: 200,
+      width: 160,
       render(row) {
         const status = dockerState.containerRuningStats[row.id]
         let cpu = ''
@@ -152,29 +152,31 @@ const createColumns = ({
     {
       title: t('apps.dockerManage.ports'),
       key: 'port',
-      width: 200,
+      width: 150,
       render(row) {
-        const group = (g: Docker.Container.Port) => {
-          return h(NTag,
-            {
-              size: 'tiny',
-              style: { margin: '0 2px' },
-              type: 'info',
-              title: `(${g.type}) ${g.ip}:${g.publicPort} => ${g.privatePort}`,
-            },
-            `${g.type} ${g.ip}:${g.publicPort}`)
-        }
-
         const c = []
         for (const key in row.ports) {
-          if (Object.prototype.hasOwnProperty.call(row.ports, key)) {
-            const element = row.ports[key]
-            if (element.publicPort !== 0 && element.privatePort !== 0) {
-              c.push(group(element))
-            }
+          if (!Object.prototype.hasOwnProperty.call(row.ports, key))
+            continue
+          const g = row.ports[key]
+          // 跳过容器侧条目（ip 为空或 ::，与宿主机映射重复）
+          if (g.ip === '' || g.ip === '::')
+            continue
+          if (g.publicPort !== 0 && g.privatePort !== 0) {
+            const text = g.publicPort === g.privatePort
+              ? `${g.ip}:${g.publicPort}`
+              : `${g.ip}:${g.publicPort}→${g.privatePort}`
+            c.push(h(NTag,
+              {
+                size: 'tiny',
+                style: { margin: '0 2px' },
+                type: 'info',
+                title: `(${g.type}) ${g.ip}:${g.publicPort} => ${g.privatePort}`,
+              },
+              text,
+            ))
           }
         }
-
         return h(NEllipsis, { lineClamp: 2 }, c)
       },
     },
@@ -184,7 +186,7 @@ const createColumns = ({
       },
       key: 'action',
       fixed: 'right',
-      width: 100,
+      width: 160,
       align: 'center',
       render(row) {
         return h(
@@ -332,7 +334,7 @@ onUnmounted(() => {
           :bordered="false"
           size="small" :data="dockerState.containerList"
           :columns="columns" :loading="loadingList"
-          :scroll-x="800"
+          :scroll-x="808"
         />
       </div>
     </div>

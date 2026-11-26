@@ -458,7 +458,7 @@ onUnmounted(() => {
             v-if="panelState.panelConfig.systemMonitorShow
               && ((panelState.panelConfig.systemMonitorPublicVisitModeShow && authStore.visitMode === VisitMode.VISIT_MODE_PUBLIC)
                 || authStore.visitMode === VisitMode.VISIT_MODE_LOGIN)"
-            class="flex mx-auto"
+            class="item-list group-glass mt-[28px] group-enter"
           >
             <SystemMonitor
               :allow-edit="authStore.visitMode === VisitMode.VISIT_MODE_LOGIN"

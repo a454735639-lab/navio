@@ -138,7 +138,7 @@
     },
     "dockerManage": {
       "action": "Action",
-      "alertText": "At present, only the operation and opening and closing of the container status of Docker's container is implemented. More advanced functions (creation, deletion ...) will decide whether to develop according to the needs of subsequent users.",
+      "alertText": "View container status and start / stop / restart containers. Create and delete operations are on the roadmap.",
       "containerName": "Container name",
       "created": "Created",
       "dead": "Dead",
