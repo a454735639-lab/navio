@@ -101,8 +101,14 @@ onUnmounted(() => {
         <div class="mt-1 text-sm font-medium text-center w-full px-1" :style="{ color: textColor }">
           {{ $t('deskModule.systemMonitor.network') }}
         </div>
-        <div class="text-xs opacity-60 text-center w-full px-1 mt-[2px]" :style="{ color: textColor }">
-          {{ $t('deskModule.systemMonitor.upload') }}{{ formatBytes(netState?.txBytes || 0) }}
+        <!-- 累积上传/下载并排显示（对齐环形仪表副标题区） -->
+        <div class="flex items-center justify-center w-full gap-2 mt-[2px]" style="font-size: 11px; line-height: 1.3;">
+          <span class="truncate" :style="{ color: progressColor }" :title="`${$t('deskModule.systemMonitor.totalSent')} ${formatBytes(netState?.txBytes || 0)}`">
+            ↑{{ formatBytes(netState?.txBytes || 0) }}
+          </span>
+          <span class="truncate" :style="{ color: RX_COLOR }" :title="`${$t('deskModule.systemMonitor.totalRecv')} ${formatBytes(netState?.rxBytes || 0)}`">
+            ↓{{ formatBytes(netState?.rxBytes || 0) }}
+          </span>
         </div>
       </div>
       <!-- 图标风格：竖排数字 -->
