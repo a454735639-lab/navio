@@ -125,7 +125,6 @@ const columns: DataTableColumns<RankRow> = [
     key: 'total',
     minWidth: 100,
     sorter: (a, b) => a.total - b.total,
-    defaultSorter: true,
     render(row) {
       return fmtBytes(row.total)
     },
