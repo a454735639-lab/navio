@@ -133,12 +133,13 @@ func calculateBlockIO(blkio types.BlkioStats) (blkRead float64, blkWrite float64
 	for _, bioEntry := range blkio.IoServiceBytesRecursive {
 		switch strings.ToLower(bioEntry.Op) {
 		case "read":
-			blkRead = (blkRead + float64(bioEntry.Value)) / 1024 / 1024
+			blkRead += float64(bioEntry.Value)
 		case "write":
-			blkWrite = (blkWrite + float64(bioEntry.Value)) / 1024 / 1024
+			blkWrite += float64(bioEntry.Value)
 		}
 	}
-	return
+	// 累加后再统一换算成 MB，避免在循环内反复除导致多块盘时严重低估
+	return blkRead / 1024 / 1024, blkWrite / 1024 / 1024
 }
 func calculateNetwork(network map[string]types.NetworkStats) (float64, float64) {
 	var rx, tx float64
