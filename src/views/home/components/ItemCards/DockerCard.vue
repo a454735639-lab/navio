@@ -460,7 +460,7 @@ function updateStats(info: Panel.ItemInfo, data: Docker.Container.Stats) {
   }
 
   if (containerState.value.runStatus) {
-    describeText.value = `CPU:${roundNumberToTwoDecimalPlaces(containerState.value.cpuPercent)}% RAM:${bytesToSize(containerState.value.memory * 1024 * 1024)}\n实时 ↑${formatNetSpeed(netSpeed.tx)} ↓${formatNetSpeed(netSpeed.rx)}\n累积 ↑${bytesToSize(containerState.value.networkTX * 1024)} ↓${bytesToSize(containerState.value.networkRX * 1024)}`
+    describeText.value = `CPU:${roundNumberToTwoDecimalPlaces(containerState.value.cpuPercent)}% RAM:${bytesToSize(containerState.value.memory * 1024 * 1024)}\n实时 ↑${formatNetSpeed(netSpeed.value.tx)} ↓${formatNetSpeed(netSpeed.value.rx)}\n累积 ↑${bytesToSize(containerState.value.networkTX * 1024)} ↓${bytesToSize(containerState.value.networkRX * 1024)}`
     // 设置徽章的颜色
     switch (containerState.value.runStatus) {
       case DockerContainerInfoState.running:
