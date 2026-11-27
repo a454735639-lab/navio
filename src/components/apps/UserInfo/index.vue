@@ -9,6 +9,7 @@ import { AccountSwitcherManager, RoundCardModal, STip } from '@/components/commo
 import { updateInfo, updatePassword } from '@/api/system/user'
 import { updateLocalUserInfo } from '@/utils/cmn'
 import { t } from '@/locales'
+import { themePacks } from '@/utils/themePacks'
 
 // const userStore = useUserStore()
 const authStore = useAuthStore()
@@ -143,6 +144,10 @@ function handleChangeTheme(value: Theme) {
   appStore.setTheme(value)
   // location.reload()
 }
+
+function handleChangeThemePack(packId: string) {
+  appStore.setThemePack(packId)
+}
 </script>
 
 <template>
@@ -219,6 +224,30 @@ function handleChangeTheme(value: Theme) {
           <NSelect v-model:value="themeValue" size="small" :options="themeOptions" @update-value="handleChangeTheme" />
         </div>
       </div>
+
+      <!-- 配色主题包：与明暗模式独立组合，点击即时生效 -->
+      <div class="mt-[14px]">
+        <div class="text-slate-500 font-bold mb-[8px] flex items-center">
+          {{ $t('apps.userInfo.themePack') }}
+          <STip :content="t('apps.userInfo.themePackTip')" />
+        </div>
+        <div class="theme-pack-grid">
+          <button
+            v-for="pack in themePacks" :key="pack.id"
+            type="button"
+            class="theme-pack-item"
+            :class="{ 'is-active': appStore.themePack === pack.id }"
+            :title="t(`apps.userInfo.themePackName.${pack.i18nKey}`)"
+            @click="handleChangeThemePack(pack.id)"
+          >
+            <span
+              class="theme-pack-swatch"
+              :style="{ background: `linear-gradient(135deg, ${pack.preview[0]}, ${pack.preview[1]})` }"
+            />
+            <span class="theme-pack-label">{{ t(`apps.userInfo.themePackName.${pack.i18nKey}`) }}</span>
+          </button>
+        </div>
+      </div>
     </NCard>
 
     <!-- 账号切换 -->
@@ -271,3 +300,57 @@ function handleChangeTheme(value: Theme) {
     </RoundCardModal>
   </div>
 </template>
+
+<style scoped>
+/* 配色主题包选择器 */
+.theme-pack-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: 8px;
+  max-width: 560px;
+}
+
+.theme-pack-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 6px;
+  border-radius: 10px;
+  border: 1px solid rgba(127, 136, 155, .22);
+  background: rgba(255, 255, 255, .4);
+  cursor: pointer;
+  transition: border-color .18s, background .18s, transform .18s;
+}
+
+.theme-pack-item:hover {
+  border-color: rgba(127, 136, 155, .42);
+  transform: translateY(-1px);
+}
+
+.theme-pack-item.is-active {
+  border-color: var(--nv-accent, #4f46e5);
+  background: var(--nv-accent-soft, rgba(79, 70, 229, .1));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--nv-accent, #4f46e5) 22%, transparent);
+}
+
+.theme-pack-swatch {
+  width: 100%;
+  height: 26px;
+  border-radius: 7px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), 0 1px 3px rgba(15, 23, 42, .14);
+}
+
+.theme-pack-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: inherit;
+  opacity: .8;
+  white-space: nowrap;
+}
+
+.theme-pack-item.is-active .theme-pack-label {
+  opacity: 1;
+  font-weight: 600;
+}
+</style>

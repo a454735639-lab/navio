@@ -16,6 +16,12 @@ export const useAppStore = defineStore('app-store', {
       this.recordState()
     },
 
+    /** 切换配色主题包（与明暗模式独立） */
+    setThemePack(packId: string) {
+      this.themePack = packId
+      this.recordState()
+    },
+
     setLanguage(language: Language) {
       if (this.language !== language) {
         this.language = language

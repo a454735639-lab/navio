@@ -25,13 +25,14 @@ body {
 :root {
     --lg-blur: 28px;
     --lg-saturate: 180%;
-    /* 亮色：玻璃底 */
-    --lg-fill-top: rgba(255, 255, 255, .58);
-    --lg-fill-bottom: rgba(255, 255, 255, .34);
-    --lg-border: rgba(255, 255, 255, .72);
-    --lg-rim-top: rgba(255, 255, 255, .95);
+    /* 玻璃底色取自当前主题包（--nv-* 由 useTheme 运行时注入），
+       变量未注入时用兜底值，保证首屏不闪白 */
+    --lg-fill-top: var(--nv-glass-top, rgba(255, 255, 255, .58));
+    --lg-fill-bottom: var(--nv-glass-bottom, rgba(255, 255, 255, .34));
+    --lg-border: var(--nv-glass-border, rgba(255, 255, 255, .72));
+    --lg-rim-top: var(--nv-glass-rim, rgba(255, 255, 255, .95));
     --lg-rim-bottom: rgba(255, 255, 255, .55);
-    --lg-sheen: rgba(255, 255, 255, .55);
+    --lg-sheen: var(--nv-glass-sheen, rgba(255, 255, 255, .55));
     --lg-shadow: 0 18px 44px -18px rgba(8, 14, 32, .34), 0 4px 14px -6px rgba(8, 14, 32, .18);
     --lg-inset: inset 0 1px 0 rgba(255, 255, 255, .85), inset 0 -1px 1px rgba(255, 255, 255, .3);
 }
@@ -39,12 +40,7 @@ body {
 .dark {
     --lg-blur: 30px;
     --lg-saturate: 160%;
-    --lg-fill-top: rgba(255, 255, 255, .10);
-    --lg-fill-bottom: rgba(255, 255, 255, .045);
-    --lg-border: rgba(255, 255, 255, .16);
-    --lg-rim-top: rgba(255, 255, 255, .40);
     --lg-rim-bottom: rgba(255, 255, 255, .14);
-    --lg-sheen: rgba(255, 255, 255, .20);
     --lg-shadow: 0 18px 44px -18px rgba(0, 0, 0, .70), 0 4px 14px -6px rgba(0, 0, 0, .40);
     --lg-inset: inset 0 1px 0 rgba(255, 255, 255, .22), inset 0 -1px 1px rgba(255, 255, 255, .08);
 }
@@ -119,18 +115,18 @@ body {
 /* 页面底：极淡的彩色渐变，让上层玻璃有东西可折射 */
 .app-page {
     background:
-        radial-gradient(58% 44% at 14% 8%, rgba(140, 175, 255, .18), transparent 62%),
-        radial-gradient(52% 40% at 88% 92%, rgba(190, 155, 255, .16), transparent 62%),
+        radial-gradient(58% 44% at 14% 8%, var(--nv-page-aurora-a, var(--nv-aurora-a, rgba(140, 175, 255, .18))), transparent 62%),
+        radial-gradient(52% 40% at 88% 92%, var(--nv-aurora-b, rgba(190, 155, 255, .16)), transparent 62%),
         linear-gradient(160deg, rgba(255, 255, 255, .55), rgba(238, 241, 247, .72));
-    border: 1px solid rgba(255, 255, 255, .70);
+    border: 1px solid var(--nv-glass-border, rgba(255, 255, 255, .70));
 }
 
 .dark .app-page {
     background:
-        radial-gradient(58% 44% at 14% 8%, rgba(70, 100, 200, .22), transparent 62%),
-        radial-gradient(52% 40% at 88% 92%, rgba(120, 80, 190, .20), transparent 62%),
+        radial-gradient(58% 44% at 14% 8%, var(--nv-aurora-a, rgba(70, 100, 200, .22)), transparent 62%),
+        radial-gradient(52% 40% at 88% 92%, var(--nv-aurora-b, rgba(120, 80, 190, .20)), transparent 62%),
         linear-gradient(160deg, rgba(255, 255, 255, .05), rgba(18, 22, 31, .55));
-    border-color: rgba(255, 255, 255, .10);
+    border-color: var(--nv-glass-border, rgba(255, 255, 255, .10));
 }
 
 /* 内容卡片：液态玻璃。

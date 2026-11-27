@@ -279,6 +279,19 @@
         "auto": "跟随系统 ",
         "dark": "深色 ",
         "light": "浅色 "
+      },
+      "themePack": "配色主题",
+      "themePackTip": "配色主题与上方明暗模式独立组合，例如「深色 + 森野」。点击即时生效，仅保存在本地。",
+      "themePackName": {
+        "indigo": "靛蓝",
+        "sakura": "樱花",
+        "forest": "森野",
+        "dusk": "暮光",
+        "glacier": "冰川",
+        "graphite": "石墨",
+        "cyber": "赛博",
+        "morandi": "莫兰迪",
+        "abyss": "深海"
       }
     },
     "gallery": {

@@ -927,10 +927,10 @@ html {
   margin-right: -17px;
   border-radius: 18px;
   background: linear-gradient(155deg,
-      rgba(255, 255, 255, .16) 0%,
-      rgba(255, 255, 255, .07) 46%,
-      rgba(255, 255, 255, .11) 100%);
-  border: 1px solid rgba(255, 255, 255, .18);
+      var(--nv-glass-top, rgba(255, 255, 255, .16)) 0%,
+      var(--nv-glass-bottom, rgba(255, 255, 255, .07)) 46%,
+      var(--nv-glass-top, rgba(255, 255, 255, .11)) 100%);
+  border: 1px solid var(--nv-glass-border, rgba(255, 255, 255, .18));
   backdrop-filter: blur(30px) saturate(180%);
   -webkit-backdrop-filter: blur(30px) saturate(180%);
   box-shadow:
@@ -950,7 +950,7 @@ html {
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  background: radial-gradient(120% 54% at 50% -10%, rgba(255, 255, 255, .26), transparent 60%);
+  background: radial-gradient(120% 54% at 50% -10%, var(--nv-glass-sheen, rgba(255, 255, 255, .26)), transparent 60%);
 }
 
 /* 边缘渐变折射描边 */

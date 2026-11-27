@@ -279,6 +279,19 @@
         "auto": "Follow the system ",
         "dark": "Dark ",
         "light": "Light "
+      },
+      "themePack": "Color theme",
+      "themePackTip": "Color themes combine independently with the light/dark mode above, e.g. \"Dark + Forest\". Applies instantly and is saved locally.",
+      "themePackName": {
+        "indigo": "Indigo",
+        "sakura": "Sakura",
+        "forest": "Forest",
+        "dusk": "Dusk",
+        "glacier": "Glacier",
+        "graphite": "Graphite",
+        "cyber": "Cyber",
+        "morandi": "Morandi",
+        "abyss": "Abyss"
       }
     },
     "gallery": {

@@ -260,25 +260,20 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* ══ 主题变量 ══════════════════════════════════════════ */
+/* ══ 主题变量：全部取自主题包（--nv-*），括号内为兜底值 ══ */
 .root {
-  --accent: #4f46e5;
-  --accent-hover: #4338ca;
-  --accent-soft: rgba(79, 70, 229, .10);
-  --text-strong: #0f172a;
-  --text-muted: rgba(71, 85, 105, .78);
-  --field-text: #1e293b;
-  --page-bg: #e9edf5;
+  --accent: var(--nv-accent, #4f46e5);
+  --accent-hover: var(--nv-accent-hover, #4338ca);
+  --accent-soft: var(--nv-accent-soft, rgba(79, 70, 229, .10));
+  --text-strong: var(--nv-text-strong, #0f172a);
+  --text-muted: var(--nv-text-muted, rgba(71, 85, 105, .78));
+  --field-text: var(--nv-text-strong, #1e293b);
+  --page-bg: var(--nv-page-bg, #e9edf5);
+  --logo-gradient: var(--nv-logo-gradient, linear-gradient(150deg, #6366f1, #8b5cf6 55%, #4f46e5));
 }
 
 .root.dark {
-  --accent: #818cf8;
-  --accent-hover: #a5b4fc;
-  --accent-soft: rgba(129, 140, 248, .16);
-  --text-strong: #f1f5ff;
-  --text-muted: rgba(203, 213, 225, .72);
-  --field-text: #e8eefc;
-  --page-bg: #070b16;
+  --field-text: var(--nv-text-strong, #e8eefc);
 }
 
 .root {
@@ -303,25 +298,21 @@ onMounted(() => {
 }
 .root.dark .bg { opacity: .26; filter: brightness(.7) saturate(.85); }
 
-/* 彩色光斑 —— Liquid Glass 的关键：玻璃背后必须有流动色块 */
+/* 彩色光斑 —— Liquid Glass 的关键：玻璃背后必须有流动色块
+   四色取自当前主题包，切换主题时整页光斑一起变 */
 .bg-aurora {
   position: absolute;
   inset: -10%;
   pointer-events: none;
   background:
-    radial-gradient(46% 38% at 16% 20%, rgba(120, 170, 255, .62), transparent 64%),
-    radial-gradient(42% 34% at 84% 14%, rgba(186, 146, 255, .58), transparent 62%),
-    radial-gradient(52% 44% at 74% 84%, rgba(104, 226, 214, .50), transparent 66%),
-    radial-gradient(40% 34% at 22% 80%, rgba(255, 168, 200, .48), transparent 62%);
+    radial-gradient(46% 38% at 16% 20%, var(--nv-aurora-a, rgba(120, 170, 255, .62)), transparent 64%),
+    radial-gradient(42% 34% at 84% 14%, var(--nv-aurora-b, rgba(186, 146, 255, .58)), transparent 62%),
+    radial-gradient(52% 44% at 74% 84%, var(--nv-aurora-c, rgba(104, 226, 214, .50)), transparent 66%),
+    radial-gradient(40% 34% at 22% 80%, var(--nv-aurora-d, rgba(255, 168, 200, .48)), transparent 62%);
   filter: blur(46px) saturate(150%);
   animation: auroraDrift 26s ease-in-out infinite alternate;
 }
 .root.dark .bg-aurora {
-  background:
-    radial-gradient(46% 38% at 16% 20%, rgba(58, 92, 190, .70), transparent 64%),
-    radial-gradient(42% 34% at 84% 14%, rgba(112, 76, 190, .66), transparent 62%),
-    radial-gradient(52% 44% at 74% 84%, rgba(28, 132, 140, .58), transparent 66%),
-    radial-gradient(40% 34% at 22% 80%, rgba(150, 62, 116, .52), transparent 62%);
   filter: blur(52px) saturate(135%);
 }
 
@@ -535,9 +526,9 @@ onMounted(() => {
   justify-content: center;
   border-radius: 14px;
   color: #fff;
-  background: linear-gradient(150deg, #6366f1, #8b5cf6 55%, #4f46e5);
+  background: var(--logo-gradient);
   box-shadow:
-    0 8px 20px -6px rgba(79, 70, 229, .58),
+    0 8px 20px -6px color-mix(in srgb, var(--accent) 58%, transparent),
     inset 0 1px 0 rgba(255, 255, 255, .45),
     inset 0 -1px 0 rgba(0, 0, 0, .12);
 }
