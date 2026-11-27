@@ -263,8 +263,9 @@ async function handleStartImport() {
     </NAlert>
     <div class="flex justify-center m-[50px]">
       <div class="m-[10px]">
+        <!-- 同时接受新格式(.navio.json)与旧格式(.sun-panel.json/.sunpanel.json) -->
         <NUpload
-          accept=".sun-panel.json,.sunpanel.json"
+          accept=".navio.json,.sun-panel.json,.sunpanel.json"
           directory-dnd
           :default-upload="false"
           :show-file-list="false"
@@ -286,10 +287,6 @@ async function handleStartImport() {
           {{ $t('apps.exportImport.export') }}
         </NButton>
       </div>
-    </div>
-
-    <div class="flex justify-center">
-      <a href="https://hslr-s.github.io/sun-panel-tool-page/#/" target="_blank">{{ $t('apps.exportImport.transmuteStandard') }}</a>
     </div>
 
     <!-- 调试模式 -->

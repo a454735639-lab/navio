@@ -124,7 +124,7 @@ function handleNetModeChangeAutoMaxPingMsChange(value: number) {
 </script>
 
 <template>
-  <div class="bg-slate-200 dark:bg-zinc-900 rounded-[10px] p-[8px] overflow-auto">
+  <div class="app-page rounded-[12px] p-[8px] overflow-auto">
     <NCard style="border-radius:10px" size="small">
       <template #header>
         <div class="text-slate-500 font-bold">

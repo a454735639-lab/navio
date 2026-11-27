@@ -170,6 +170,12 @@ func DatabaseConnect() {
 	}
 
 	database.NotFoundAndCreateUser(global.Db)
+
+	// 修正历史版本写入数据库的旧默认站点标题（幂等，只改恰好等于旧默认值的记录）
+	if err := database.MigrateLegacySiteTitle(global.Db); err != nil {
+		// 迁移失败不应阻断启动，仅记录日志
+		log.Println("Site title migration skipped:", err)
+	}
 }
 
 // 命令行参数初始化
@@ -237,15 +243,16 @@ func CommandRun(arg CMDParams) {
 }
 
 func Logo() {
-	fmt.Println("     ____            ___                __")
-	fmt.Println("    / __/_ _____    / _ \\___ ____  ___ / /")
-	fmt.Println("   _\\ \\/ // / _ \\  / ___/ _ `/ _ \\/ -_) / ")
-	fmt.Println("  /___/\\_,_/_//_/ /_/   \\_,_/_//_/\\__/_/  ")
+	fmt.Println("    _   __      _          ")
+	fmt.Println("   / | / /___ _(_)___  ____ ")
+	fmt.Println("  /  |/ / __ `/ / __ \\/ __ \\")
+	fmt.Println(" / /|  / /_/ / / /_/ / /_/ /")
+	fmt.Println("/_/ |_/\\__,_/_/\\____/\\____/ ")
 	fmt.Println("")
 
 	versionInfo := cmn.GetSysVersionInfo()
 	fmt.Println("Version:", versionInfo.Version)
-	fmt.Println("Welcome to the Sun-Panel.")
-	fmt.Println("Project address:", "https://github.com/hslr-s/sun-panel")
+	fmt.Println("Welcome to Navio.")
+	fmt.Println("Project address:", "https://github.com/a454735639-lab/navio")
 
 }

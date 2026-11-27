@@ -146,7 +146,7 @@ function handleChangeTheme(value: Theme) {
 </script>
 
 <template>
-  <div class="bg-slate-200 dark:bg-zinc-900 p-2 h-full mb-10 overflow-auto">
+  <div class="app-page p-2 h-full mb-10 overflow-auto">
     <!-- 账号信息 -->
     <NCard style="border-radius:10px" size="small">
       <template #header>

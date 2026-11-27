@@ -13,7 +13,7 @@ const ms = useMessage()
 const dialog = useDialog()
 const appStore = useAppStore()
 const openApiLink = computed(() => {
-  const url = 'http://links.sun-panel.top/openApiDoc_'
+  const url = 'https://links.sun-panel.top/openApiDoc_'
   if (appStore.language === 'zh-CN')
     return `${url}zh_cn`
 
@@ -90,7 +90,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="bg-slate-200 dark:bg-zinc-900 p-2 h-full">
+  <div class="app-page p-2 h-full">
     <NCard style="border-radius:10px" size="small">
       <NAlert type="info" :bordered="false">
         {{ t("apps.openApi.alertText") }}<a :href="openApiLink" target="_blank" class="text-[blue]">{{

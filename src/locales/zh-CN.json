@@ -71,7 +71,7 @@
       "checkFailed": "检查更新失败，请点此去官网查看",
       "checkUpdate": "检查新版本",
       "runningInfo": "运行信息",
-      "intro": "Sun-Panel OSS 本地版：开源自托管的导航面板，内置图库、公开图库、备份迁移与多账号支持。本版本移除了 PRO 授权限制，全部功能本地可用。",
+      "intro": "Navio 本地版：开源自托管的导航面板，内置图库、公开图库、备份迁移与多账号支持。本版本移除了 PRO 授权限制，全部功能本地可用。",
       "checkUploadTip1": "1. 如果部署机在有联网的情况下，一直检查失败，请检查部署机的时间是否为任意时区标准时间。",
       "checkUploadTip2": "2. 仅支持检查是否有新版本，不支持在线更新。更新前请务必查看更新日志和备份数据！",
       "checkUploadTip3": "3. 如果想体验 beta 版本，请勾选后再次检查",
@@ -198,7 +198,7 @@
       "customDangerAlert": "这是一个危险的操作，请不要填入不被信任的代码，这样可能会导致隐私泄露、布局错乱或者被攻击等。如果未生效请清理浏览器缓存",
       "customImageURL": "自定义图片地址（支持 API 地址）",
       "customJSAndCss": "自定义JS和CSS文件",
-      "customJSAndCssAlert": "如果没有PRO授权，可以进入到安装Sun-Panel的NAS或服务器，找到“自定义”的路径（{path}）直接修改和保存文件，仍然是生效的",
+      "customJSAndCssAlert": "如果没有 PRO 授权，可以进入到安装 Navio 的 NAS 或服务器，找到“自定义”的路径（{path}）直接修改和保存文件，仍然是生效的",
       "favicon": "站点图标",
       "isEnableItemCardCache": "启用项目卡片数据缓存",
       "isEnableItemCardCacheTip": "是否启用项目卡片数据缓存，启用后可以提升分组和卡片加载速度",
@@ -219,7 +219,7 @@
       "textAutoColor": "如果颜色设置为纯白色（#ffffff），文字颜色会随卡片背景颜色的明暗度自动调节黑色或者白色"
     },
     "openApi": {
-      "alertText": "Sun-Panel提供了开放接口，可以通过开发来实现添加项目等操作，具体请参考：",
+      "alertText": "Navio 提供了开放接口，可以通过开发来实现添加项目等操作，具体请参考：",
       "apiUrl": "接口地址",
       "autoDomainWarning": "这里的域名是自动获取的，开发时请根据实际情况填写",
       "deactivate": "停用",
@@ -238,10 +238,10 @@
         "upgradePRO": "升级为PRO"
       },
       "funcDescription": "功能比较",
-      "goToSunPanelAuthSite": "授权官网",
+      "goToAuthSite": "授权官网",
       "hideProBadgeText": "隐藏所有的 PRO 功能徽章以及说明",
       "login": "登录",
-      "loginSunPanel": "登录Sun-Panel授权平台",
+      "loginAuthPlatform": "登录 Navio 授权平台",
       "logout": "退出",
       "logoutConfirm": "你确定要退出PRO授权账号吗？",
       "notLogin": "未登录",
@@ -532,17 +532,24 @@
     "visitPublic": "访客模式",
     "captchaPlaceholder": "请输入验证码",
     "signInTitle": "登录以继续",
-    "selfHosted": "安全 · 私密 · 自托管"
+    "selfHosted": "安全 · 私密 · 自托管",
+    "switchCardStyle": "切换卡片风格",
+    "styleGlass": "液态玻璃",
+    "styleSoft": "柔和"
   },
   "panelHome": {
-    "changeToLanModel": "将 Sun-Panel 切换为内网环境",
+    "changeToLanModel": "将 Navio 切换为内网环境",
     "useTailnet": "使用 Tailscale(100.x) 地址",
     "changeToLanModelSuccess": "已经切换到内网环境",
-    "changeToWanModel": "将 Sun-Panel 切换为公网环境",
+    "changeToWanModel": "将 Navio 切换为公网环境",
     "changeToWanModelSuccess": "已经切换到公网环境",
     "goToLogin": "前往登录",
     "openLanUrl": "打开局域网地址",
-    "openWanUrl": "打开公网地址"
+    "openWanUrl": "打开公网地址",
+    "collapseGroup": "收起分组",
+    "expandGroup": "展开分组",
+    "collapseAllGroups": "全部收起",
+    "expandAllGroups": "全部展开"
   },
   "proAuth": {
     "appName": "PRO授权"

@@ -71,7 +71,7 @@
       "checkFailed": "Failed to check for updates, please click here to check on the official website",
       "checkUpdate": "Check for new version",
       "runningInfo": "Running info",
-      "intro": "Sun-Panel OSS local edition: a self-hosted navigation panel with gallery, public gallery, backup & migration and multi-account support. PRO limits are removed in this build, all features work locally.",
+      "intro": "Navio local edition: a self-hosted navigation panel with gallery, public gallery, backup & migration and multi-account support. PRO limits are removed in this build, all features work locally.",
       "checkUploadTip1": "1. If the deployment machine keeps failing to check when connected to the Internet, please check whether the time of the deployment machine is the standard time of any time zone.",
       "checkUploadTip2": "2. Only supports checking whether there is a new version, and does not support online updates. \nPlease be sure to check the update log and backup data before updating!",
       "checkUploadTip3": "3. If you want to experience the beta version, please check it again",
@@ -198,7 +198,7 @@
       "customDangerAlert": "This is a dangerous operation. Please do not fill in untrusted code, which may lead to privacy leaks, layout confusion, or attacks. \nIf it does not take effect, please clear your browser cache.",
       "customImageURL": "Customize image URL (supported API address)",
       "customJSAndCss": "Custom JS and CSS files",
-      "customJSAndCssAlert": "If you do not have PRO authorization, you can enter the NAS or server where Sun-Panel is installed, find the \"custom\" path ({path}), modify and save the file directly, and it will still be effective.",
+      "customJSAndCssAlert": "If you do not have PRO authorization, you can enter the NAS or server where Navio is installed, find the \"custom\" path ({path}), modify and save the file directly, and it will still be effective.",
       "favicon": "site icon",
       "isEnableItemCardCache": "Enable item card data cache",
       "isEnableItemCardCacheTip": "Whether to enable project card data caching, it can improve grouping and card loading speed after activation",
@@ -219,7 +219,7 @@
       "textAutoColor": "If the color is set to pure white (#FFFFFF), the text color will automatically adjust the black or white with the lightness of the background color of the card"
     },
     "openApi": {
-      "alertText": "Sun-Panel provides an open interface that can be used to add projects and other operations through development. For details, please refer to:",
+      "alertText": "Navio provides an open interface that can be used to add projects and other operations through development. For details, please refer to:",
       "apiUrl": "API Url",
       "autoDomainWarning": "The domain name here is automatically obtained. Please fill it in according to the actual situation during development.",
       "deactivate": "Deactivate",
@@ -238,10 +238,10 @@
         "upgradePRO": "Upgrade to PRO"
       },
       "funcDescription": "Function comparison",
-      "goToSunPanelAuthSite": "Authorized official website",
+      "goToAuthSite": "Authorized official website",
       "hideProBadgeText": "Hide all PRO feature badges and descriptions",
       "login": "Log in",
-      "loginSunPanel": "Log in to the Sun-Panel authorization platform",
+      "loginAuthPlatform": "Log in to the Navio authorization platform",
       "logout": "logout",
       "logoutConfirm": "Are you sure you want to log out of your PRO authorized account?",
       "notLogin": "Not logged in",
@@ -532,17 +532,24 @@
     "visitPublic": "Public mode",
     "captchaPlaceholder": "Enter captcha",
     "signInTitle": "Sign in to continue",
-    "selfHosted": "Secure · Private · Self-hosted"
+    "selfHosted": "Secure · Private · Self-hosted",
+    "switchCardStyle": "Switch card style",
+    "styleGlass": "Liquid glass",
+    "styleSoft": "Soft"
   },
   "panelHome": {
-    "changeToLanModel": "Switch Sun-Panel to the internal network environment",
+    "changeToLanModel": "Switch Navio to the internal network environment",
     "useTailnet": "Use Tailscale (100.x) address",
     "changeToLanModelSuccess": "Already switched to intranet network environment",
-    "changeToWanModel": "Switch Sun-Panel to the public network environment",
+    "changeToWanModel": "Switch Navio to the public network environment",
     "changeToWanModelSuccess": "Already switched to public network environment",
     "goToLogin": "Go to login",
     "openLanUrl": "Open LAN URL",
-    "openWanUrl": "Open WAN URL"
+    "openWanUrl": "Open WAN URL",
+    "collapseGroup": "Collapse group",
+    "expandGroup": "Expand group",
+    "collapseAllGroups": "Collapse all",
+    "expandAllGroups": "Expand all"
   },
   "proAuth": {
     "appName": "PRO authorization"

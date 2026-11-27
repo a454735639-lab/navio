@@ -1,7 +1,7 @@
 // import { enUS, koKR, zhCN, zhTW } from 'naive-ui'
 import { useAppStore } from '@/store'
 
-const linksDomain = 'http://links.sun-panel.top'
+const linksDomain = 'https://links.sun-panel.top'
 
 export function useDomainLinks() {
   const appStore = useAppStore()

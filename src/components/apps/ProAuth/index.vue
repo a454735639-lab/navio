@@ -179,7 +179,7 @@ function handleSubmit() {
 }
 
 function openToLink(link: string) {
-  window.open('http://links.sun-panel.top' + `/${link}`)
+  window.open('https://links.sun-panel.top' + `/${link}`, '_blank', 'noopener,noreferrer')
 }
 
 function getLangeuageSimple() {
@@ -217,7 +217,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="bg-slate-200 dark:bg-zinc-900 p-2 h-full">
+  <div class="app-page p-2 h-full">
     <NCard style="border-radius:10px" size="small">
       <div class="flex justify-center">
         <div class="m-5 w-[300px]">
@@ -248,7 +248,7 @@ onMounted(() => {
                 <NButton size="small" ghost type="success" @click="handleLogin">
                   <NEllipsis style="max-width: 200px">
                     <span class="text-white">
-                      {{ t("apps.proAuth.loginSunPanel") }}
+                      {{ t("apps.proAuth.loginAuthPlatform") }}
                     </span>
                   </NEllipsis>
                 </NButton>
@@ -298,7 +298,7 @@ onMounted(() => {
 
       <div class="my-2 text-center">
         <NButton size="small" style="margin: 2px;" @click="openToLink(`proAuthSite_${getLangeuageSimple()}`)">
-          {{ t("apps.proAuth.goToSunPanelAuthSite") }}
+          {{ t("apps.proAuth.goToAuthSite") }}
         </NButton>
 
         <NButton size="small" style="margin: 2px;" @click="openToLink(`funcDescription_${getLangeuageSimple()}`)">
@@ -316,7 +316,7 @@ onMounted(() => {
 
       <br>
 
-      <RoundCardModal v-model:show="loginModalShow" style="width:400px" :title="t('apps.proAuth.loginSunPanel')">
+      <RoundCardModal v-model:show="loginModalShow" style="width:400px" :title="t('apps.proAuth.loginAuthPlatform')">
         <div class="flex items-center">
           <div>
             <NButton size="tiny" type="info" @click="openToLink('proAuthSiteRegister')">

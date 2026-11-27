@@ -38,7 +38,7 @@ const propClass = ref(props.class)
       class="item-card-small"
     >
       <div
-        class="item-card-small-icon overflow-hidden rounded-xl sunpanel w-[70px] h-[70px] mx-auto transition-all duration-200"
+        class="item-card-small-icon overflow-hidden rounded-xl w-[70px] h-[70px] mx-auto transition-all duration-200"
         :class="propClass"
         :style="{
           'backgroundColor': backgroundColor ?? defaultBackground,

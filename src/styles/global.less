@@ -17,12 +17,161 @@ body {
     background-color: #e2e8f0;
 }
 
+/* ═══════════════════════════════════════════════════════════
+   Liquid Glass 设计令牌
+   与登录页保持同一套视觉语言：半透明底 + 强模糊 + 顶部高光 + 边缘折射。
+   使用方式：给容器加 .lg-surface，需要更强层次时再加 .lg-surface--strong。
+   ═══════════════════════════════════════════════════════════ */
+:root {
+    --lg-blur: 28px;
+    --lg-saturate: 180%;
+    /* 亮色：玻璃底 */
+    --lg-fill-top: rgba(255, 255, 255, .58);
+    --lg-fill-bottom: rgba(255, 255, 255, .34);
+    --lg-border: rgba(255, 255, 255, .72);
+    --lg-rim-top: rgba(255, 255, 255, .95);
+    --lg-rim-bottom: rgba(255, 255, 255, .55);
+    --lg-sheen: rgba(255, 255, 255, .55);
+    --lg-shadow: 0 18px 44px -18px rgba(8, 14, 32, .34), 0 4px 14px -6px rgba(8, 14, 32, .18);
+    --lg-inset: inset 0 1px 0 rgba(255, 255, 255, .85), inset 0 -1px 1px rgba(255, 255, 255, .3);
+}
+
+.dark {
+    --lg-blur: 30px;
+    --lg-saturate: 160%;
+    --lg-fill-top: rgba(255, 255, 255, .10);
+    --lg-fill-bottom: rgba(255, 255, 255, .045);
+    --lg-border: rgba(255, 255, 255, .16);
+    --lg-rim-top: rgba(255, 255, 255, .40);
+    --lg-rim-bottom: rgba(255, 255, 255, .14);
+    --lg-sheen: rgba(255, 255, 255, .20);
+    --lg-shadow: 0 18px 44px -18px rgba(0, 0, 0, .70), 0 4px 14px -6px rgba(0, 0, 0, .40);
+    --lg-inset: inset 0 1px 0 rgba(255, 255, 255, .22), inset 0 -1px 1px rgba(255, 255, 255, .08);
+}
+
+.lg-surface {
+    position: relative;
+    background: linear-gradient(155deg, var(--lg-fill-top) 0%, var(--lg-fill-bottom) 100%);
+    border: 1px solid var(--lg-border);
+    backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
+    -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
+    box-shadow: var(--lg-shadow), var(--lg-inset);
+}
+
+/* 顶部弧形高光：模拟受光面 */
+.lg-surface::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(120% 56% at 50% -10%, var(--lg-sheen), transparent 60%);
+    opacity: .8;
+}
+
+/* 边缘折射：1px 渐变内描边，左上亮、中间透、右下再亮 */
+.lg-surface::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    pointer-events: none;
+    background: linear-gradient(142deg,
+            var(--lg-rim-top) 0%,
+            rgba(255, 255, 255, .12) 30%,
+            rgba(255, 255, 255, .03) 52%,
+            rgba(255, 255, 255, .14) 74%,
+            var(--lg-rim-bottom) 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+}
+
+/* 让内容浮在 ::before / ::after 之上 */
+.lg-surface > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* 不支持 backdrop-filter 时退回接近不透明的底，保证可读性 */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .lg-surface {
+        background: rgba(255, 255, 255, .95);
+    }
+
+    .dark .lg-surface {
+        background: rgba(28, 32, 44, .96);
+    }
+}
+
+/* 设置页等内页的底色：不再是纯色，改成能透出玻璃的柔和渐变 */
 .app-background {
-    background-color: white;
+    background-color: #eef1f7;
 }
 
 .dark .app-background {
-    background-color: #2c2c32;
+    background-color: #12161f;
+}
+
+/* ── 系统应用（设置页）统一玻璃表面 ───────────────────────── */
+/* 页面底：极淡的彩色渐变，让上层玻璃有东西可折射 */
+.app-page {
+    background:
+        radial-gradient(58% 44% at 14% 8%, rgba(140, 175, 255, .18), transparent 62%),
+        radial-gradient(52% 40% at 88% 92%, rgba(190, 155, 255, .16), transparent 62%),
+        linear-gradient(160deg, rgba(255, 255, 255, .55), rgba(238, 241, 247, .72));
+    border: 1px solid rgba(255, 255, 255, .70);
+}
+
+.dark .app-page {
+    background:
+        radial-gradient(58% 44% at 14% 8%, rgba(70, 100, 200, .22), transparent 62%),
+        radial-gradient(52% 40% at 88% 92%, rgba(120, 80, 190, .20), transparent 62%),
+        linear-gradient(160deg, rgba(255, 255, 255, .05), rgba(18, 22, 31, .55));
+    border-color: rgba(255, 255, 255, .10);
+}
+
+/* 内容卡片：液态玻璃。Naive 的 NCard 自带底色，需要覆盖掉 */
+.app-card.n-card {
+    background: linear-gradient(155deg, rgba(255, 255, 255, .70) 0%, rgba(255, 255, 255, .48) 100%);
+    border: 1px solid rgba(255, 255, 255, .80);
+    backdrop-filter: blur(26px) saturate(180%);
+    -webkit-backdrop-filter: blur(26px) saturate(180%);
+    box-shadow:
+        0 16px 40px -18px rgba(8, 14, 32, .26),
+        0 4px 12px -6px rgba(8, 14, 32, .12),
+        inset 0 1px 0 rgba(255, 255, 255, .90),
+        inset 0 -1px 0 rgba(255, 255, 255, .40);
+}
+
+.dark .app-card.n-card {
+    background: linear-gradient(155deg, rgba(255, 255, 255, .09) 0%, rgba(255, 255, 255, .04) 100%);
+    border-color: rgba(255, 255, 255, .14);
+    box-shadow:
+        0 16px 40px -18px rgba(0, 0, 0, .62),
+        0 4px 12px -6px rgba(0, 0, 0, .34),
+        inset 0 1px 0 rgba(255, 255, 255, .16),
+        inset 0 -1px 0 rgba(255, 255, 255, .05);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .app-page {
+        background: #eef1f7;
+    }
+
+    .dark .app-page {
+        background: #12161f;
+    }
+
+    .app-card.n-card {
+        background: #fff;
+    }
+
+    .dark .app-card.n-card {
+        background: #1c202c;
+    }
 }
 
 .item-card-info,.item-card-small-icon {

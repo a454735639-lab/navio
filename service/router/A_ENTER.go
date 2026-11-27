@@ -41,7 +41,7 @@ func InitRouters() {
 	httpAddress := fmt.Sprintf("%s:%d", addr, httpPort)
 	httpsAddress := fmt.Sprintf("%s:%d", addr, httpsPort)
 
-	global.Logger.Info("Sun-Panel is Started.")
+	global.Logger.Info("Navio is Started.")
 
 	global.Logger.Info("HTTP: ", httpAddress)
 
@@ -115,7 +115,7 @@ func InitRouter(router *gin.Engine) *gin.Engine {
 			}
 
 			if globalSettingSiteSetting.Title == "" {
-				globalSettingSiteSetting.Title = "Sun-Panel"
+				globalSettingSiteSetting.Title = "Navio"
 			}
 
 			// 替换内容中的占位符 ( 模版变量格式:{{__VAR__}} )

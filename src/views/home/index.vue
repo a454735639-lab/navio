@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { VueDraggable } from 'vue-draggable-plus'
 import { NBackTop, NButton, useDialog, useMessage } from 'naive-ui'
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref, computed } from 'vue'
 import { AppStarter, EditItem, ItemCards } from './components'
 import { AccountSwitcher, Clock, SearchBox, SystemMonitor } from '@/components/deskModule'
 import { Loading, SvgIcon } from '@/components/common'
@@ -43,6 +43,73 @@ const settingModalShow = ref(false)
 
 const items = ref<ItemGroup[]>([])
 const filterItems = ref<ItemGroup[]>([])
+
+// ── 分组收起/展开 ────────────────────────────────────────────
+// 折叠状态按分组 onlyName（无则回退 id）持久化到 localStorage，
+// 刷新/换设备（同浏览器）后保持用户选择；搜索时自动展开以便看到命中项。
+const COLLAPSED_KEY = 'navio_collapsed_groups'
+
+function groupKey(group: ItemGroup): string {
+  return group.onlyName || `id-${group.id}`
+}
+
+function loadCollapsed(): Set<string> {
+  try {
+    const raw = localStorage.getItem(COLLAPSED_KEY)
+    if (!raw) return new Set()
+    const arr = JSON.parse(raw)
+    return Array.isArray(arr) ? new Set(arr.filter((v: unknown) => typeof v === 'string')) : new Set()
+  }
+  catch {
+    // localStorage 不可用（隐私模式）时退化为不折叠
+    return new Set()
+  }
+}
+
+const collapsedKeys = ref<Set<string>>(loadCollapsed())
+const isSearching = ref(false)
+
+function isCollapsed(group: ItemGroup): boolean {
+  // 搜索态下强制展开，避免用户以为搜不到
+  if (isSearching.value) return false
+  return collapsedKeys.value.has(groupKey(group))
+}
+
+function toggleGroupCollapsed(group: ItemGroup) {
+  const key = groupKey(group)
+  const next = new Set(collapsedKeys.value)
+  if (next.has(key)) next.delete(key)
+  else next.add(key)
+  collapsedKeys.value = next
+  try {
+    localStorage.setItem(COLLAPSED_KEY, JSON.stringify([...next]))
+  }
+  catch {
+    // 写入失败不影响当前会话内的折叠行为
+  }
+}
+
+// 全部收起 / 全部展开
+const allCollapsed = computed(() => {
+  const list = filterItems.value.filter(g => (g.items?.length ?? 0) > 0)
+  if (!list.length) return false
+  return list.every(g => collapsedKeys.value.has(groupKey(g)))
+})
+
+function toggleAllGroups() {
+  const target = allCollapsed.value
+  const next = new Set(collapsedKeys.value)
+  for (const g of filterItems.value) {
+    const key = groupKey(g)
+    if (target) next.delete(key)
+    else next.add(key)
+  }
+  collapsedKeys.value = next
+  try {
+    localStorage.setItem(COLLAPSED_KEY, JSON.stringify([...next]))
+  }
+  catch {}
+}
 
 let hasRunFooterJS = false
 
@@ -368,6 +435,7 @@ onMounted(async () => {
 // 前端搜索过滤
 function itemFrontEndSearch(keyword?: string) {
   keyword = keyword?.trim()
+  isSearching.value = !!keyword && panelState.panelConfig.searchBoxSearchIcon === true
   if (keyword !== '' && panelState.panelConfig.searchBoxSearchIcon) {
     const filteredData: ItemGroup[] = []
     for (let i = 0; i < items.value.length; i++) {
@@ -502,6 +570,26 @@ onUnmounted(() => {
             <Loading />
           </div>
 
+          <!-- 分组总控：全部收起 / 全部展开（仅在有分组时出现） -->
+          <div
+            v-if="!itemCardsLoading && filterItems.length > 1"
+            class="flex justify-end mt-[18px]"
+          >
+            <button
+              type="button"
+              class="collapse-all-btn"
+              :title="allCollapsed ? $t('panelHome.expandAllGroups') : $t('panelHome.collapseAllGroups')"
+              @click="toggleAllGroups"
+            >
+              <SvgIcon
+                class="collapse-arrow mr-1"
+                :class="{ 'is-collapsed': allCollapsed }"
+                icon="mdi:chevron-down"
+              />
+              <span>{{ allCollapsed ? $t('panelHome.expandAllGroups') : $t('panelHome.collapseAllGroups') }}</span>
+            </button>
+          </div>
+
           <!-- 组纵向排列 -->
           <div
             v-for="(itemGroup, itemGroupIndex) in filterItems" :id="`item-group-${itemGroup.onlyName}`"
@@ -513,10 +601,35 @@ onUnmounted(() => {
             @mouseleave="handleSetHoverStatus(itemGroupIndex, false)"
           >
             <!-- 分组标题 -->
-            <div class="text-white text-[15px] font-semibold mb-[16px] ml-[10px] flex items-center tracking-wide">
-              <span class="group-title text-shadow">
+            <div
+              class="group-header text-white text-[15px] font-semibold mb-[16px] ml-[10px] flex items-center tracking-wide"
+              :class="{ 'mb-0': isCollapsed(itemGroup) }"
+            >
+              <!-- 折叠按钮：整块标题可点击，箭头指示当前状态 -->
+              <button
+                type="button"
+                class="collapse-btn"
+                :aria-expanded="!isCollapsed(itemGroup)"
+                :aria-label="isCollapsed(itemGroup) ? $t('panelHome.expandGroup') : $t('panelHome.collapseGroup')"
+                :title="isCollapsed(itemGroup) ? $t('panelHome.expandGroup') : $t('panelHome.collapseGroup')"
+                @click="toggleGroupCollapsed(itemGroup)"
+              >
+                <SvgIcon
+                  class="collapse-arrow"
+                  :class="{ 'is-collapsed': isCollapsed(itemGroup) }"
+                  icon="mdi:chevron-down"
+                />
+              </button>
+
+              <span class="group-title text-shadow cursor-pointer select-none" @click="toggleGroupCollapsed(itemGroup)">
                 {{ itemGroup.title }}
               </span>
+
+              <!-- 折叠时用角标显示隐藏的条目数 -->
+              <span v-if="isCollapsed(itemGroup) && itemGroup.items?.length" class="group-count">
+                {{ itemGroup.items.length }}
+              </span>
+
               <div
                 v-if="authStore.visitMode === VisitMode.VISIT_MODE_LOGIN"
                 class="group-buttons ml-2 delay-100 transition-opacity flex"
@@ -531,17 +644,20 @@ onUnmounted(() => {
               </div>
             </div>
 
-            <!-- 编辑栏 -->
-            <div v-if="itemGroup.sortStatus" class="flex my-4">
-              <NButton color="#2a2a2a6b" size="small" @click="handleSaveSort(itemGroup)">
-                <template #icon>
-                  <SvgIcon class="text-white font-xl" icon="material-symbols:save" />
-                </template>
-                <div class="text-white">
-                  {{ $t('common.saveSort') }}
+            <!-- 折叠内容：高度过渡，收起时不渲染内部拖拽组件以省性能 -->
+            <Transition name="group-collapse">
+              <div v-show="!isCollapsed(itemGroup)" class="group-body">
+                <!-- 编辑栏 -->
+                <div v-if="itemGroup.sortStatus" class="flex my-4">
+                  <NButton color="#2a2a2a6b" size="small" @click="handleSaveSort(itemGroup)">
+                    <template #icon>
+                      <SvgIcon class="text-white font-xl" icon="material-symbols:save" />
+                    </template>
+                    <div class="text-white">
+                      {{ $t('common.saveSort') }}
+                    </div>
+                  </NButton>
                 </div>
-              </NButton>
-            </div>
 
             <!-- 详情图标 -->
             <template v-if="itemGroup.items && (!itemGroup.cardStyle || itemGroup.cardStyle.style === PanelPanelConfigStyleEnum.info)">
@@ -629,6 +745,8 @@ onUnmounted(() => {
                 </div>
               </vuedraggable>
             </template>
+              </div>
+            </Transition>
           </div>
         </div>
         <div class="mt-5 footer custom-footer" v-html="panelState.panelConfig.footerHtml" />
@@ -637,7 +755,7 @@ onUnmounted(() => {
 
     <!-- 悬浮按钮 -->
     <div
-      class="fixed-element bg-[rgba(30,34,48,0.55)] rounded-xl shadow-[0_8px_28px_rgba(0,0,0,0.28)] p-[3px] flex backdrop-blur-xl border border-white/10"
+      class="fixed-element float-glass rounded-2xl p-[3px] flex"
     >
       <!-- 自动模式：延迟显示（与系统入口同一排，点击立即重新探测） -->
       <div
@@ -782,21 +900,200 @@ html {
   /* 距离屏幕左侧的距离 */
 }
 
-/* Pass visuals: 分组毛玻璃底板 —— 给每个分组一层可见但不抢眼的容器 */
+/* 悬浮工具条：液态玻璃，与分组底板同一套语言 */
+.float-glass {
+  background: linear-gradient(155deg, rgba(255, 255, 255, .20) 0%, rgba(255, 255, 255, .08) 100%);
+  border: 1px solid rgba(255, 255, 255, .22);
+  backdrop-filter: blur(30px) saturate(185%);
+  -webkit-backdrop-filter: blur(30px) saturate(185%);
+  box-shadow:
+    0 16px 38px -16px rgba(0, 0, 0, .52),
+    0 4px 12px -6px rgba(0, 0, 0, .24),
+    inset 0 1px 0 rgba(255, 255, 255, .32),
+    inset 0 -1px 0 rgba(255, 255, 255, .08);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .float-glass {
+    background: rgba(30, 34, 48, .88);
+  }
+}
+
+/* Liquid Glass：分组底板 —— 与登录页同一套玻璃语言
+   半透明渐变底 + 强模糊高饱和 + 顶部弧形高光 + 1px 边缘折射 */
 .group-glass {
   position: relative;
   padding: 18px 20px 20px;
   margin-left: -20px;
   margin-right: -20px;
-  border-radius: 18px;
-  background: rgba(24, 28, 40, 0.28);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(16px) saturate(115%);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.16);
+  border-radius: 20px;
+  background: linear-gradient(155deg,
+      rgba(255, 255, 255, .16) 0%,
+      rgba(255, 255, 255, .07) 46%,
+      rgba(255, 255, 255, .11) 100%);
+  border: 1px solid rgba(255, 255, 255, .18);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  box-shadow:
+    0 20px 48px -20px rgba(0, 0, 0, .48),
+    0 6px 18px -8px rgba(0, 0, 0, .22),
+    inset 0 1px 0 rgba(255, 255, 255, .30),
+    inset 0 -1px 1px rgba(255, 255, 255, .10),
+    inset 1px 0 0 rgba(255, 255, 255, .14),
+    inset -1px 0 0 rgba(255, 255, 255, .07);
+  transition: background .3s, border-color .3s, box-shadow .3s;
+}
+
+/* 顶部弧形高光：玻璃受光面 */
+.group-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(120% 54% at 50% -10%, rgba(255, 255, 255, .26), transparent 60%);
+}
+
+/* 边缘渐变折射描边 */
+.group-glass::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  background: linear-gradient(142deg,
+      rgba(255, 255, 255, .55) 0%,
+      rgba(255, 255, 255, .08) 30%,
+      rgba(255, 255, 255, .02) 52%,
+      rgba(255, 255, 255, .10) 74%,
+      rgba(255, 255, 255, .38) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+/* 让内容浮在装饰层之上 */
+.group-glass > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* 拖拽排序态：给玻璃加一圈高亮，代替原来生硬的黑边 */
+.group-glass.border {
+  background: linear-gradient(155deg,
+      rgba(255, 255, 255, .22) 0%,
+      rgba(255, 255, 255, .10) 46%,
+      rgba(255, 255, 255, .15) 100%);
+  border-color: rgba(255, 255, 255, .34);
+  box-shadow:
+    0 24px 56px -20px rgba(0, 0, 0, .55),
+    inset 0 1px 0 rgba(255, 255, 255, .40),
+    inset 0 0 0 1px rgba(255, 255, 255, .12);
+}
+
+/* 不支持 backdrop-filter 时退回半不透明，避免文字糊在背景上 */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .group-glass {
+    background: rgba(24, 28, 40, .82);
+  }
 }
 
 .item-list {
   transition: background-color 0.25s, box-shadow 0.25s;
+}
+
+/* ── 分组收起/展开 ─────────────────────────────────────── */
+.collapse-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-right: 4px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 0.18s, background-color 0.18s;
+}
+.collapse-btn:hover,
+.collapse-btn:focus-visible {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.14);
+  outline: none;
+}
+
+.collapse-arrow {
+  width: 17px;
+  height: 17px;
+  transition: transform 0.24s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.collapse-arrow.is-collapsed {
+  transform: rotate(-90deg);
+}
+
+/* 折叠时显示隐藏条目数 */
+.group-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  margin-left: 8px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.group-body {
+  overflow: hidden;
+}
+
+/* 高度过渡：用 grid 技巧实现 auto 高度动画 */
+.group-collapse-enter-active,
+.group-collapse-leave-active {
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+.group-collapse-enter-from,
+.group-collapse-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+/* 全部收起/展开按钮：液态玻璃胶囊 */
+.collapse-all-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 13px 6px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, .22);
+  background: linear-gradient(155deg, rgba(255, 255, 255, .20), rgba(255, 255, 255, .09));
+  color: rgba(255, 255, 255, .9);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  box-shadow:
+    0 10px 26px -12px rgba(0, 0, 0, .48),
+    inset 0 1px 0 rgba(255, 255, 255, .30),
+    inset 0 -1px 0 rgba(255, 255, 255, .08);
+  transition: background .18s, color .18s, border-color .18s, transform .18s;
+}
+.collapse-all-btn:hover {
+  background: linear-gradient(155deg, rgba(255, 255, 255, .30), rgba(255, 255, 255, .14));
+  color: #fff;
+  border-color: rgba(255, 255, 255, .34);
+  transform: translateY(-1px);
 }
 
 /* Pass motion: 分组依次淡入，仅首次加载，不干扰拖拽 */

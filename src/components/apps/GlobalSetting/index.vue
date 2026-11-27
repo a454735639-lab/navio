@@ -147,8 +147,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="bg-slate-200 dark:bg-zinc-900 rounded-[10px] p-[8px] overflow-auto">
-    <NCard style="border-radius:10px" size="small">
+  <div class="app-page rounded-[12px] p-[8px] overflow-auto">
+    <NCard class="app-card" style="border-radius:12px" size="small">
       <NH3>
         {{ t("apps.globalSetting.personalise") }}
       </NH3>

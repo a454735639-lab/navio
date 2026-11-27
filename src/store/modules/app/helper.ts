@@ -20,7 +20,7 @@ export function defaultSetting(): AppState {
     language = 'zh-CN'
 
   const siteSetting: GlobalSetting.SiteSetting = {
-    title: 'Sun-Panel',
+    title: 'Navio',
     favicoUrl: '',
     loginBackgroundUrl: loginDefaultBackgroundUrl,
     isEnableLoginCaptcha: false,

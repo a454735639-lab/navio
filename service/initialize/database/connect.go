@@ -1,6 +1,7 @@
 package database
 
 import (
+	"encoding/json"
 	"log"
 	"os"
 	"path"
@@ -146,7 +147,7 @@ func NotFoundAndCreateUser(db *gorm.DB) error {
 		if err != gorm.ErrRecordNotFound {
 			return err
 		}
-		username := "admin@sun.cc"
+		username := "admin@navio.local"
 		fUser.Mail = username
 		fUser.Username = username
 		fUser.Name = username
@@ -160,4 +161,52 @@ func NotFoundAndCreateUser(db *gorm.DB) error {
 	}
 
 	return nil
+}
+
+// legacySiteTitle 是上游历史版本写入数据库的默认站点标题。
+const legacySiteTitle = "Sun-Panel"
+
+// currentSiteTitle 是当前分支的默认站点标题。
+const currentSiteTitle = "Navio"
+
+// MigrateLegacySiteTitle 把数据库里仍为上游默认值的站点标题纠正为当前品牌。
+// 只处理「恰好等于旧默认值」的情况，用户自行修改过的标题保持原样。
+// 该操作幂等，可重复执行。
+func MigrateLegacySiteTitle(db *gorm.DB) error {
+	if db == nil {
+		return nil
+	}
+
+	var row models.SystemSetting
+	err := db.Model(&models.SystemSetting{}).
+		Where("config_name = ?", "global_setting_site").
+		First(&row).Error
+	if err == gorm.ErrRecordNotFound {
+		// 从未保存过站点设置，无需迁移（读取时会回退到代码默认值）
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	var site map[string]interface{}
+	if err := json.Unmarshal([]byte(row.ConfigValue), &site); err != nil {
+		// 配置不是合法 JSON 时不强行改写，避免破坏用户数据
+		return nil
+	}
+
+	title, _ := site["title"].(string)
+	if title != legacySiteTitle {
+		return nil
+	}
+
+	site["title"] = currentSiteTitle
+	updated, err := json.Marshal(site)
+	if err != nil {
+		return err
+	}
+
+	return db.Model(&models.SystemSetting{}).
+		Where("id = ?", row.ID).
+		Update("config_value", string(updated)).Error
 }
