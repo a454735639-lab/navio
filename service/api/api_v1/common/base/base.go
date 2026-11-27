@@ -107,9 +107,12 @@ var imageExtMagic = map[string][][]byte{
 	".webp": {[]byte("RIFF")},
 	".bmp":  {[]byte("BM")},
 	".ico":  {{0x00, 0x00, 0x01, 0x00}},
-	".avif": {[]byte("ftyp")},
-	".heic": {[]byte("ftyp")},
+	// AVIF/HEIC 基于 ISO BMFF：前 4 字节是 box 长度，ftyp 位于偏移 4-7。
+	// 用带偏移的 magic 记录，避免把偏移 0-3 的 box 长度误当作 ftyp。
 }
+
+// isoBMFFExts 使用 ISO BMFF 容器格式的图片扩展名（ftyp box 在偏移 4）
+var isoBMFFExts = map[string]bool{".avif": true, ".heic": true, ".heif": true, ".avifs": true}
 
 // sniffImage 校验图片文件头；svg 是文本格式，单独判断是否以 <svg / <?xml 开头
 func sniffImage(ext string, head []byte) bool {
@@ -117,6 +120,10 @@ func sniffImage(ext string, head []byte) bool {
 	if ext == ".svg" {
 		trimmed := strings.TrimSpace(string(head))
 		return strings.HasPrefix(trimmed, "<svg") || strings.HasPrefix(trimmed, "<?xml")
+	}
+	// ISO BMFF 系列：偏移 4 处应为 "ftyp"
+	if isoBMFFExts[ext] {
+		return len(head) >= 8 && string(head[4:8]) == "ftyp"
 	}
 	magics, ok := imageExtMagic[ext]
 	if !ok {
@@ -173,7 +180,11 @@ func UploadFileAndSave(c *gin.Context, agreeExtNames []string, maxSize int64) (f
 			os.MkdirAll(fildDir, os.ModePerm)
 		}
 		filepath := fmt.Sprintf("%s%s%s", fildDir, fileName, fileExt)
-		c.SaveUploadedFile(f, filepath)
+		// 修复：保存失败必须返回错误，否则会留下指向不存在文件的数据库记录（破图）
+		if saveErr := c.SaveUploadedFile(f, filepath); saveErr != nil {
+			err = saveErr
+			return
+		}
 
 		pureFilePath := filepath[len(configUpload):]
 		// 向数据库添加记录

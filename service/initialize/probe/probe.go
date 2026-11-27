@@ -32,26 +32,36 @@ func (c *certReloader) setPaths(certFile, keyFile string) {
 }
 
 func (c *certReloader) getCertificate(_ *tls.ClientHelloInfo) (*tls.Certificate, error) {
-	if fi, err := os.Stat(c.certFile); err == nil {
-		c.mu.RLock()
-		loaded := c.cert != nil
-		c.mu.RUnlock()
-		if !loaded || fi.ModTime().After(c.modTime) {
-			if cert, err := tls.LoadX509KeyPair(c.certFile, c.keyFile); err == nil {
-				c.mu.Lock()
-				c.cert = &cert
-				c.modTime = fi.ModTime()
-				c.mu.Unlock()
+	// 所有共享字段的读取都在锁内完成，避免与 setPaths 的写入产生 data race
+	c.mu.Lock()
+	certFile, keyFile := c.certFile, c.keyFile
+	cert, modTime := c.cert, c.modTime
+	c.mu.Unlock()
+
+	// 同时检查证书与私钥的 mtime：单独替换私钥也应触发热加载
+	certInfo, certErr := os.Stat(certFile)
+	keyInfo, keyErr := os.Stat(keyFile)
+	needReload := cert == nil ||
+		(certErr == nil && certInfo.ModTime().After(modTime)) ||
+		(keyErr == nil && keyInfo.ModTime().After(modTime))
+	if needReload && certErr == nil && keyErr == nil {
+		if loaded, err := tls.LoadX509KeyPair(certFile, keyFile); err == nil {
+			latest := certInfo.ModTime()
+			if keyInfo.ModTime().After(latest) {
+				latest = keyInfo.ModTime()
 			}
+			c.mu.Lock()
+			c.cert = &loaded
+			c.modTime = latest
+			c.mu.Unlock()
+			cert = &loaded
 		}
 	}
 
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	if c.cert == nil {
-		return nil, fmt.Errorf("certificate not loaded: %s", c.certFile)
+	if cert == nil {
+		return nil, fmt.Errorf("certificate not loaded: %s", certFile)
 	}
-	return c.cert, nil
+	return cert, nil
 }
 
 // handler 只提供 /probe（及根路径）用于网络位置探测，返回 204。
@@ -72,26 +82,52 @@ func Start() {
 }
 
 var state = struct {
-	mu       sync.Mutex
-	srv      *http.Server
-	reloader *certReloader
-	port     int
+	mu          sync.Mutex
+	srv         *http.Server
+	reloader    *certReloader
+	port        int
+	renewCancel context.CancelFunc // 取消当前续期循环，配置变更/停用时调用
 }{}
 
-var renewOnce sync.Once
-
-func startRenewLoop(p CertProvider) {
-	renewOnce.Do(func() {
-		go func() {
-			ticker := time.NewTicker(12 * time.Hour)
-			defer ticker.Stop()
-			for range ticker.C {
+// startRenewLoop 启动 ACME 续期循环。
+// 关键：每次 tick 都从最新配置重建 provider（而非永久捕获首次 provider），
+// 这样用户修改域名/Cloudflare Token/证书路径后续期会用新配置签发。
+// 返回的 cancel 用于配置变更或停用时停止旧循环，避免重复 goroutine 与停用后仍写盘。
+func startRenewLoop() context.CancelFunc {
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		ticker := time.NewTicker(12 * time.Hour)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				global.Logger.Infoln("[probe] acme renew loop stopped")
+				return
+			case <-ticker.C:
+				cfg := LoadConfig()
+				if !cfg.Enabled || cfg.Provider != ProviderACME {
+					return
+				}
+				p, err := NewProvider(cfg)
+				if err != nil {
+					global.Logger.Warnf("[probe] renew provider init failed: %v", err)
+					continue
+				}
 				if _, _, err := p.Ensure(); err != nil {
 					global.Logger.Warnf("[probe] acme renew check failed: %v", err)
 				}
 			}
-		}()
-	})
+		}
+	}()
+	return cancel
+}
+
+// stopRenewLoop 停止当前续期循环（调用方须持有 state.mu）
+func stopRenewLoop() {
+	if state.renewCancel != nil {
+		state.renewCancel()
+		state.renewCancel = nil
+	}
 }
 
 // Apply 热应用配置：端口/开关变化时重建监听；仅证书路径变化时更新文件路径（mtime 热加载）。
@@ -111,6 +147,7 @@ func Apply(cfg Config) {
 	}
 
 	if !cfg.Enabled {
+		stopRenewLoop() // 停用探针时一并停止续期，避免后台继续签发写盘
 		shutdown()
 		return
 	}
@@ -123,7 +160,8 @@ func Apply(cfg Config) {
 
 	certFile, keyFile := cfg.CertPath, cfg.KeyPath
 	if cfg.Provider == ProviderACME {
-		// ACME 签发是长任务：异步执行，先起监听（证书就绪后按 mtime 自动加载）
+		// ACME 签发是长任务：异步执行，先起监听（证书就绪后按 mtime 自动加载）。
+		// 串行化由 acmeProvider.Ensure 内部的 acmeEnsureMu 完成（覆盖初次签发与续期两条路径）。
 		go func(p CertProvider) {
 			if _, _, err := p.Ensure(); err != nil {
 				global.Logger.Warnf("[probe] acme ensure failed: %v", err)
@@ -155,9 +193,11 @@ func Apply(cfg Config) {
 	state.reloader = reloader
 	state.port = cfg.Port
 
-	// ACME：后台巡检续期（每 12 小时判断一次，剩余 <30 天时自动续）
+	// ACME：后台巡检续期（每 12 小时判断一次，剩余 <30 天时自动续）。
+	// 配置变更时先取消旧循环再启动新的，避免多个循环并存与绑定旧 provider。
+	stopRenewLoop()
 	if cfg.Provider == ProviderACME {
-		startRenewLoop(provider)
+		state.renewCancel = startRenewLoop()
 	}
 
 	go func() {

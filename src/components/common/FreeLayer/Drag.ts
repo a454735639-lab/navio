@@ -50,7 +50,7 @@ const startDrag = function (
     params.top = parseInt(getCss(target, 'top'))
 
   // o是移动对象
-  bar.onmousedown = function (event: MouseEvent) {
+  const onMouseDown = function (event: MouseEvent) {
     params.flag = true
     const e = event || (window.event as MouseEvent)
 
@@ -62,17 +62,19 @@ const startDrag = function (
     params.currentX = e.clientX
     params.currentY = e.clientY
   }
+  bar.onmousedown = onMouseDown
 
-  document.addEventListener('mouseup', () => {
+  const onMouseUp = () => {
     params.flag = false
     if (getCss(target, 'left') !== 'auto')
       params.left = parseInt(getCss(target, 'left'))
 
     if (getCss(target, 'top') !== 'auto')
       params.top = parseInt(getCss(target, 'top'))
-  })
+  }
+  document.addEventListener('mouseup', onMouseUp)
 
-  document.addEventListener('mousemove', (event: MouseEvent) => {
+  const onMouseMove = (event: MouseEvent) => {
     const e = event || (window.event as MouseEvent)
     if (params.flag) {
       // 重新获取元素及屏幕的宽度信息
@@ -113,7 +115,17 @@ const startDrag = function (
 
       return false
     }
-  })
+  }
+  document.addEventListener('mousemove', onMouseMove)
+
+  // 返回清理函数：浮层每次打开都会调用 startDrag，必须先移除上一轮注册的
+  // document 监听器，否则监听器持续累积、拖动旧 DOM 且内存无法回收。
+  return () => {
+    document.removeEventListener('mouseup', onMouseUp)
+    document.removeEventListener('mousemove', onMouseMove)
+    bar.onmousedown = null
+    bar.onselectstart = null
+  }
 }
 
 export default startDrag

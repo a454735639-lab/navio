@@ -16,7 +16,7 @@ export function correctionNumber(v: number, keepNum = 2): number {
 }
 
 export function allCPUUsages(cpuInfo: SystemMonitor.CPUInfo | null) {
-  if (!cpuInfo)
+  if (!cpuInfo || !Array.isArray(cpuInfo.usages) || cpuInfo.usages.length === 0)
     return 0
   let countPercentage = 0
   for (let i = 0; i < cpuInfo.usages.length; i++) {

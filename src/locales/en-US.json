@@ -172,7 +172,7 @@
       "totalUpload": "Total upload",
       "totalAll": "Total traffic",
       "containerCount": "{n} containers",
-      "trafficTip": "Cumulative traffic counts since each container last started and resets on restart; sourced from docker stats, consistent with the cards.",
+      "trafficTip": "Cumulative traffic since each container last started; resets on restart. Sourced from docker stats and includes container-to-container traffic, so it may differ from the host NIC figures on the home page.",
       "loadFailed": "Failed to load"
     },
     "exportImport": {

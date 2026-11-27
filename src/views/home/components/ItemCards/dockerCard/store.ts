@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { onMounted, ref } from 'vue'
+import { onMounted, onScopeDispose, ref } from 'vue'
 import { getContainersStats as getContainersStatsApi } from '@/api/docker/container'
 
 export const useDockerCardStore = defineStore('docker-card', () => {
@@ -11,7 +11,7 @@ export const useDockerCardStore = defineStore('docker-card', () => {
     [key: string]: Docker.Container.Stats
   }
 
-  // let intervalId: any
+  let statsTimer: ReturnType<typeof setInterval> | undefined
   const containerQueryStatsNum: ContainerQueryStatsNum = {}
   const containerRuningStats = ref<ContainerQueryStats>({})
   const containerQueryIds: string[] = []
@@ -98,19 +98,22 @@ export const useDockerCardStore = defineStore('docker-card', () => {
 
   onMounted(() => {
     refreshContainerListStats()
-    // console.log('docker状态定时器启动')
-    setInterval(() => {
+    // 避免重复启动定时器（store 的 onMounted 可能绑定多个组件实例）
+    if (statsTimer)
+      return
+    statsTimer = setInterval(() => {
       if (containerQueryIds.length !== 0)
         refreshContainerListStats()
-    //   console.log('计数', containerQueryStatsNum)
-    //   console.log('ids', containerQueryIds)
     }, 5000) // 5000毫秒，即5秒
   })
 
-  //   onUnmounted(() => {
-  // console.log('docker状态定时器关闭')
-  // clearInterval(intervalId)
-  //   })
+  // store 作用域销毁时清理定时器，避免卡片删除/退出登录后仍每 5 秒请求
+  onScopeDispose(() => {
+    if (statsTimer) {
+      clearInterval(statsTimer)
+      statsTimer = undefined
+    }
+  })
 
   return {
     containerRuningStats,

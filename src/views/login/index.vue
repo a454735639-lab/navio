@@ -35,7 +35,14 @@ const captchaRef = ref()
 
 const form = ref<Login.LoginReqest>({ username: defaultUsername.value, password: '', rememberMe: false })
 const REMEMBER_KEY = 'navio_remember_username'
-const savedUsername = localStorage.getItem(REMEMBER_KEY)
+// 隐私模式/禁用站点数据时 localStorage 访问会抛 SecurityError，需容错避免登录页白屏
+let savedUsername: string | null = null
+try {
+  savedUsername = localStorage.getItem(REMEMBER_KEY)
+}
+catch {
+  savedUsername = null
+}
 if (savedUsername && !defaultUsername.value) {
   form.value.username = savedUsername
   form.value.rememberMe = true
@@ -43,8 +50,13 @@ if (savedUsername && !defaultUsername.value) {
 
 function handleRememberChange(checked: boolean) {
   form.value.rememberMe = checked
-  if (checked && form.value.username) localStorage.setItem(REMEMBER_KEY, form.value.username)
-  else localStorage.removeItem(REMEMBER_KEY)
+  try {
+    if (checked && form.value.username) localStorage.setItem(REMEMBER_KEY, form.value.username)
+    else localStorage.removeItem(REMEMBER_KEY)
+  }
+  catch {
+    // 存储不可用时忽略，不影响登录
+  }
 }
 
 const loginPost = async () => {

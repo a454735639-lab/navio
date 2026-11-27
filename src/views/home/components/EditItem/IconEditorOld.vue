@@ -132,7 +132,7 @@ const handleUploadFinish = ({
               <NInput v-model:value="itemIconInfo.text" class="mb-[5px]" size="small" type="text" :placeholder="$t('iconItem.inputIconName')" @input="handleChange" />
 
               <NButton quaternary type="info">
-                <a target="_blank" href="https://icon-sets.iconify.design/">{{ $t('iconItem.onlineIconLibrary') }}</a>
+                <a target="_blank" rel="noopener noreferrer" href="https://icon-sets.iconify.design/">{{ $t('iconItem.onlineIconLibrary') }}</a>
               </NButton>
             </div>
           </div>

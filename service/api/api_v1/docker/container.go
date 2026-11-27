@@ -266,7 +266,11 @@ func collectContainersState(reqIds []string) map[string]dockerApiStructs.Contain
 	for _, v := range reqIds {
 		if cached, ok := containerStatsCache.Load(v); ok {
 			if entry, ok := cached.(cachedContainerStats); ok && now.Sub(entry.at) < containerStatsCacheTTL {
+				// 与 worker goroutine 写入 resp 的分支共用同一把锁，
+				// 否则主 goroutine 与 worker 并发写 map 会触发 fatal error（不可 recover）。
+				mu.Lock()
 				resp[v] = entry.data
+				mu.Unlock()
 				continue
 			}
 		}

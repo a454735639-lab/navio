@@ -7,6 +7,7 @@ import (
 	"path"
 	"sun-panel/global"
 	"sun-panel/lib/cmn"
+	"sun-panel/lib/netguard"
 	"sun-panel/lib/siteFavicon"
 	"sun-panel/models"
 	"time"
@@ -20,6 +21,11 @@ type FileType struct {
 // 下载图片并将记录保存到数据库中
 func (p *FileType) DownloadFileAndSaveDb(db *gorm.DB, fileUrl string, userId uint) (fileInfo models.File, err error) {
 
+	// SSRF 防护：拒绝私网/环回/元数据地址等非 http(s) 目标
+	if _, err = netguard.ValidateURL(fileUrl); err != nil {
+		global.Logger.Errorln("unsafe icon url(" + fileUrl + "): " + err.Error())
+		return
+	}
 	parsedURL, err := url.Parse(fileUrl)
 	if err != nil {
 		global.Logger.Errorln("error: URL parsing failed("+fileUrl+"):", err.Error())

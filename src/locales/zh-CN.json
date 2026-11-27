@@ -172,7 +172,7 @@
       "totalUpload": "总上传",
       "totalAll": "总流量",
       "containerCount": "容器数 {n}",
-      "trafficTip": "累积流量自容器上次启动起计，容器重启后清零；来源 docker stats，与卡片数据一致。",
+      "trafficTip": "累积流量自容器上次启动起计，容器重启后清零；来源 docker stats，包含容器间通信，与首页宿主网卡统计口径不同，数值可能不一致。",
       "loadFailed": "加载失败"
     },
     "exportImport": {

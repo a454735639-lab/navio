@@ -1,14 +1,15 @@
 version: "3.2"
 
 services:
-  sun-panel:
-    image: 'hslr/sun-panel:latest'
-    container_name: sun-panel
-    volumes:
-    - ./conf:/app/conf
-    - ./uploads:/app/uploads
-    - ./database:/app/database
-    # - ./runtime:/app/runtime
+  navio:
+    image: 'ghcr.io/a454735639-lab/navio:latest'
+    container_name: navio
     ports:
-    - 3002:3002
+      - "3002:3002"   # 面板
+      - "8443:8443"   # 可选：网络探针（TLS）
+    volumes:
+      - ./conf:/app/conf
+      # 宿主网卡精准统计：把宿主机的 /proc/net/dev 只读挂到容器内供探针读取。
+      # 不挂载时会自动回退到容器自身 netns（统计不到宿主机真实网卡流量）。
+      - /proc/net/dev:/host-net/dev:ro
     restart: always

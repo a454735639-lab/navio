@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
-const root = new URL('..', import.meta.url).pathname
-const read = p => fs.readFileSync(`${root}/${p}`, 'utf8')
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
+const root = join(dirname(fileURLToPath(import.meta.url)), '..')
+const read = p => fs.readFileSync(join(root, p), 'utf8')
 const home = read('src/views/home/index.vue')
 const api = read('src/api/docker/container.ts')
 const chart = read('src/components/apps/DockerManage/components/Container/ResourceChart.vue')

@@ -15,19 +15,20 @@ const getCss = function (o: HTMLElementWithCurrentStyle, key: string): string {
   }
 }
 
-const params = {
-  left: 0,
-  top: 0,
-  currentX: 0,
-  currentY: 0,
-  flag: false,
-}
-
 const startDrag = function (
   bar: HTMLElement,
   target: HTMLElementWithCurrentStyle,
   callback?: (left: number, top: number) => void,
 ) {
+  // params 必须每次调用独立，否则多个弹窗拖动状态串台
+  const params = {
+    left: 0,
+    top: 0,
+    currentX: 0,
+    currentY: 0,
+    flag: false,
+  }
+
   const screenWidth = document.body.clientWidth // body当前宽度
   const screenHeight = document.documentElement.clientHeight // 可见区域高度
 
@@ -60,7 +61,7 @@ const startDrag = function (
     params.currentY = e.clientY
   }
 
-  document.onmouseup = function () {
+  const onMouseUp = function () {
     params.flag = false
     if (getCss(target, 'left') !== 'auto')
       params.left = parseInt(getCss(target, 'left'))
@@ -68,8 +69,9 @@ const startDrag = function (
     if (getCss(target, 'top') !== 'auto')
       params.top = parseInt(getCss(target, 'top'))
   }
+  document.addEventListener('mouseup', onMouseUp)
 
-  document.onmousemove = function (event: MouseEvent) {
+  const onMouseMove = function (event: MouseEvent) {
     const e = event || (window.event as MouseEvent)
     if (params.flag) {
       const nowX = e.clientX
@@ -102,6 +104,15 @@ const startDrag = function (
 
       return false
     }
+  }
+  document.addEventListener('mousemove', onMouseMove)
+
+  // 返回清理函数供调用方在弹窗关闭/组件卸载时移除监听器
+  return () => {
+    document.removeEventListener('mouseup', onMouseUp)
+    document.removeEventListener('mousemove', onMouseMove)
+    bar.onmousedown = null
+    bar.onselectstart = null
   }
 }
 

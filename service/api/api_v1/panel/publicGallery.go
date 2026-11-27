@@ -1,9 +1,12 @@
 package panel
 
 import (
+	"os"
+	"strings"
 	"sun-panel/api/api_v1/common/apiReturn"
 	"sun-panel/api/api_v1/common/base"
 	"sun-panel/global"
+	"sun-panel/lib/cmn"
 	"sun-panel/models"
 
 	"github.com/gin-gonic/gin"
@@ -94,10 +97,32 @@ func (a *PublicGalleryApi) Deletes(c *gin.Context) {
 		return
 	}
 
+	// 先查出待删除记录，删除数据库行后同步删除物理文件，
+	// 否则文件会永久残留在上传目录且仍可通过 /uploads 静态路由公开访问。
+	var files []models.File
+	if err := models.Db.Where("id in ? and is_public_gallery = ?", req.IDs, true).
+		Find(&files).Error; err != nil {
+		apiReturn.ErrorDatabase(c, err.Error())
+		return
+	}
 	if err := models.Db.Where("id in ? and is_public_gallery = ?", req.IDs, true).
 		Delete(&models.File{}).Error; err != nil {
 		apiReturn.ErrorDatabase(c, err.Error())
 		return
+	}
+	// 物理文件删除失败只记录日志，不影响数据库记录已删除的结果
+	sourcePath := global.Config.GetValueString("base", "source_path")
+	for _, f := range files {
+		src := strings.TrimLeft(f.Src, "/")
+		if src == "" {
+			continue
+		}
+		fullPath := strings.TrimRight(sourcePath, "/") + "/" + src
+		if exists, _ := cmn.PathExists(fullPath); exists {
+			if err := os.Remove(fullPath); err != nil {
+				global.Logger.Errorln("delete public gallery file failed:", fullPath, err)
+			}
+		}
 	}
 	apiReturn.Success(c)
 }

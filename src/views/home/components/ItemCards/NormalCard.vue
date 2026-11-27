@@ -84,6 +84,9 @@ async function handleItemClick() {
   }
 
   const jumpUrl = await getItemUrl(props.itemInfo, panelState.panelConfig.netModeChangeAutoMaxPingMs)
+  // 空 URL 不跳转：否则 href='' 会刷新整页 / window.open('') 打开空白标签
+  if (!jumpUrl)
+    return
 
   openPage(props.itemInfo.openMethod, jumpUrl, props.itemInfo?.title)
 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, onMounted, ref, watch, withDefaults } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref, watch, withDefaults } from 'vue'
 import { SvgIcon } from '..'
 import startDrag from './Drag'
 
@@ -27,6 +27,7 @@ const emit = defineEmits<{
 let isDragging = false
 let startX: number, startY: number
 let startWidth: number, startHeight: number
+let stopDrag: (() => void) | undefined
 const elementId = getTimestampWithRandom()
 const showModal = ref(props.show)
 
@@ -150,7 +151,9 @@ function init() {
       const oBox = document.getElementById(containerId)
       const oBar = document.getElementById(moveId)
       if (props.move) {
-        startDrag(oBar as HTMLElement, oBox as HTMLElement, (left: number, top: number) => {
+        // 先清理上一次 init 注册的监听器，避免浮层反复打开时累积
+        stopDrag?.()
+        stopDrag = startDrag(oBar as HTMLElement, oBox as HTMLElement, (left: number, top: number) => {
           containerPosition.left = `${left}px`
           containerPosition.top = `${top}px`
         })
@@ -169,6 +172,12 @@ watch(() => props.show, (v: boolean) => {
 
 onMounted(() => {
   init()
+})
+
+onUnmounted(() => {
+  stopDrag?.()
+  document.removeEventListener('mousemove', onMouseMove)
+  document.removeEventListener('mouseup', onMouseUp)
 })
 </script>
 

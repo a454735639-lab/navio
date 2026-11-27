@@ -270,34 +270,125 @@ func Recovery(zipPath string, force bool) (needConfirm bool, lowestSunPanelVersi
 		return true, cfg.SunPanelLowestVersion, nil
 	}
 
+	// 校验 backup.json 内路径：必须先确保解析后仍位于解压目录内，才能参与复制。
+	// 这层校验阻断 ../ 穿越与绝对路径，避免把宿主机任意文件复制进静态可访问目录。
+	sqliteSrc, pathErr := safeBackupPath(dir, cfg.Paths.Sqlite)
+	if pathErr != nil {
+		return false, "", pathErr
+	}
+	uploadsSrc, pathErr := safeBackupPath(dir, cfg.Paths.Uploads)
+	if pathErr != nil {
+		return false, "", pathErr
+	}
+	customSrc, pathErr := safeBackupPath(dir, cfg.Paths.CustomStyle)
+	if pathErr != nil {
+		return false, "", pathErr
+	}
+
+	// 拒绝符号链接：即便路径字符串合规，若解压目录内是 symlink 仍会指向目录外
+	for _, p := range []string{sqliteSrc, uploadsSrc, customSrc} {
+		if info, lerr := os.Lstat(p); lerr == nil && info.Mode()&os.ModeSymlink != 0 {
+			return false, "", fmt.Errorf("symbolic link not allowed in backup: %s", p)
+		}
+	}
+
+	// 预检：所有待复制的源路径都必须真实存在且可读，避免在替换数据库之后
+	// 才发现 uploads/custom 源缺失，留下「新库 + 旧文件」的半恢复状态。
+	if fi, serr := os.Stat(sqliteSrc); serr != nil || fi.IsDir() {
+		return false, "", fmt.Errorf("invalid sqlite backup: %s", sqliteSrc)
+	}
+	for _, p := range []string{uploadsSrc, customSrc} {
+		if exists, _ := cmn.PathExists(p); exists {
+			if _, serr := os.Stat(p); serr != nil {
+				return false, "", fmt.Errorf("unreadable backup path %s: %v", p, serr)
+			}
+		}
+	}
+
+	// 事务性回滚：把即将被覆盖的 sqlite 先存一份副本，任意步骤失败时回滚。
+	sqlitePath := orDefault(global.Config.GetValueString("sqlite", "file_path"), "./conf/database/database.db")
+	isSqlite := strings.EqualFold(orDefault(global.Config.GetValueString("base", "database_drive"), "sqlite"), "sqlite")
+	var sqliteBackup string
+	if isSqlite {
+		if exists, _ := cmn.PathExists(sqlitePath); exists {
+			sqliteBackup = sqlitePath + ".recovery-bak"
+			if err = file.CopyFile(sqlitePath, sqliteBackup); err != nil {
+				return false, "", fmt.Errorf("backup current db before recovery: %w", err)
+			}
+			defer os.Remove(sqliteBackup)
+		}
+	}
+
+	rollback := func() {
+		if sqliteBackup != "" {
+			_ = reopenSqlite(sqlitePath) // 关闭可能指向半状态的连接
+			_ = file.CopyFile(sqliteBackup, sqlitePath)
+			_ = reopenSqlite(sqlitePath)
+		}
+	}
+
 	// 1) sqlite 整库替换
-	if strings.EqualFold(orDefault(global.Config.GetValueString("base", "database_drive"), "sqlite"), "sqlite") {
-		sqlitePath := orDefault(global.Config.GetValueString("sqlite", "file_path"), "./conf/database/database.db")
+	if isSqlite {
 		if err = reopenSqlite(sqlitePath); err != nil {
 			return
 		}
-		if err = file.CopyFile(filepath.Join(dir, cfg.Paths.Sqlite), sqlitePath); err != nil {
+		if err = file.CopyFile(sqliteSrc, sqlitePath); err != nil {
+			rollback()
 			return
 		}
 		if err = reopenSqlite(sqlitePath); err != nil {
+			rollback()
 			return
 		}
 	}
 
 	// 2) 还原 uploads（备份包里可能没有该目录）
 	sourcePath := global.Config.GetValueString("base", "source_path")
-	if exists, _ := cmn.PathExists(filepath.Join(dir, cfg.Paths.Uploads)); exists {
-		if err = file.CopyDir(filepath.Join(dir, cfg.Paths.Uploads), sourcePath); err != nil {
+	if exists, _ := cmn.PathExists(uploadsSrc); exists {
+		if err = file.CopyDir(uploadsSrc, sourcePath); err != nil {
+			rollback()
 			return
 		}
 	}
 
 	// 3) 还原 custom（同上，可能缺失）
 	customPath := orDefault(global.Config.GetValueString("base", "custom_style_path"), "./conf/custom")
-	if exists, _ := cmn.PathExists(filepath.Join(dir, cfg.Paths.CustomStyle)); exists {
-		err = file.CopyDir(filepath.Join(dir, cfg.Paths.CustomStyle), customPath)
+	if exists, _ := cmn.PathExists(customSrc); exists {
+		if err = file.CopyDir(customSrc, customPath); err != nil {
+			rollback()
+			return
+		}
 	}
 	return
+}
+
+// safeBackupPath 校验备份包内 backup.json 提供的路径，确保解析后仍位于解压目录 base 内。
+// backup.json 完全来自用户上传的 zip，属于不可信输入；若不加校验，../../ 穿越可把
+// 宿主机任意文件（conf.ini、probe/.secret 等）复制进 /uploads 静态目录造成泄露。
+func safeBackupPath(base, rel string) (string, error) {
+	if rel == "" {
+		return "", fmt.Errorf("empty backup path")
+	}
+	if filepath.IsAbs(rel) {
+		return "", fmt.Errorf("absolute path not allowed in backup: %s", rel)
+	}
+	// 统一分隔符后再清理，避免 Windows 下反斜杠被当作普通字符绕过判断
+	normalized := strings.ReplaceAll(rel, "\\", "/")
+	joined := filepath.Join(base, filepath.FromSlash(normalized))
+
+	absBase, err := filepath.Abs(base)
+	if err != nil {
+		return "", err
+	}
+	absJoined, err := filepath.Abs(joined)
+	if err != nil {
+		return "", err
+	}
+	relPath, err := filepath.Rel(absBase, absJoined)
+	if err != nil || relPath == ".." || strings.HasPrefix(relPath, ".."+string(os.PathSeparator)) {
+		return "", fmt.Errorf("path escapes backup directory: %s", rel)
+	}
+	return joined, nil
 }
 
 func orDefault(v, def string) string {

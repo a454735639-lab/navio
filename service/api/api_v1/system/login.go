@@ -65,9 +65,19 @@ func (l LoginApi) Login(c *gin.Context) {
 	)
 	bToken := ""
 	param.Username = strings.TrimSpace(param.Username)
+
+	// 账号维度限流：IP 可被 XFF 伪造绕过，但爆破目标是固定账号，
+	// 按账号计数即使换 IP 也无法绕过（零宽限：先检查再验证）。
+	accountKey := middleware.AccountKey(param.Username)
+	if middleware.IsBlocked(accountKey) {
+		apiReturn.ErrorCode(c, 1006, "too many failed attempts, try again later", nil)
+		return
+	}
+
 	if info, err = mUser.GetUserInfoByUsername(param.Username); err != nil {
 		if err == gorm.ErrRecordNotFound {
 			middleware.RecordLoginFailure(c.ClientIP())
+			middleware.RecordLoginFailure(accountKey)
 			apiReturn.ErrorByCode(c, 1003)
 			return
 		}
@@ -78,6 +88,7 @@ func (l LoginApi) Login(c *gin.Context) {
 	ok, needUpgrade := password.Verify(info.Password, param.Password)
 	if !ok {
 		middleware.RecordLoginFailure(c.ClientIP())
+		middleware.RecordLoginFailure(accountKey)
 		apiReturn.ErrorByCode(c, 1003)
 		return
 	}
@@ -94,6 +105,7 @@ func (l LoginApi) Login(c *gin.Context) {
 		return
 	}
 	middleware.ResetLoginFailure(c.ClientIP())
+	middleware.ResetLoginFailure(accountKey)
 
 	bToken = info.Token
 	if info.Token == "" {

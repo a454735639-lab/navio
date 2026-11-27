@@ -59,7 +59,15 @@ func (d *MySQLConfig) Connect() (db *gorm.DB, err error) {
 		},
 		DisableForeignKeyConstraintWhenMigrating: true,
 	})
-	sqlDb, _ := db.DB()
+	// 连接失败时 gorm.Open 可能返回 nil db 或无效的底层连接池，
+	// 必须先检查错误再取底层 sql.DB，否则 nil 解引用 panic 掩盖真正的配置错误。
+	if err != nil {
+		return nil, err
+	}
+	sqlDb, dbErr := db.DB()
+	if dbErr != nil {
+		return nil, dbErr
+	}
 	sqlDb.SetMaxIdleConns(10)  // SetMaxIdleConns 设置空闲连接池中连接的最大数量
 	sqlDb.SetMaxOpenConns(100) // SetMaxOpenConns 设置打开数据库连接的最大数量。
 	wait_timeout := d.WaitTimeout

@@ -18,6 +18,7 @@ import (
 	"sun-panel/biz"
 	"sun-panel/global"
 	"sun-panel/lib/cmn"
+	"sun-panel/lib/netguard"
 	"sun-panel/lib/siteFavicon"
 	"sun-panel/models"
 	"time"
@@ -397,7 +398,16 @@ func (a *ItemIcon) ImageProxy(c *gin.Context) {
 		return
 	}
 
-	resp, err := http.Get(imageUrl)
+	// SSRF 防护：仅允许 http(s) 且目标不得为私网/环回/链路本地/云元数据地址。
+	// 校验与实际拨号均做检查（NewSafeClient 内部再次校验，防 DNS rebinding）。
+	if _, err := netguard.ValidateURL(imageUrl); err != nil {
+		http.Error(c.Writer, "imageUrl is not allowed", http.StatusBadRequest)
+		log.Printf("blocked image proxy url %q: %v", imageUrl, err)
+		return
+	}
+
+	client := netguard.NewSafeClient(10 * time.Second)
+	resp, err := client.Get(imageUrl)
 	if err != nil {
 		http.Error(c.Writer, "Failed to fetch image", http.StatusInternalServerError)
 		log.Printf("Error fetching image: %v", err)
@@ -405,8 +415,9 @@ func (a *ItemIcon) ImageProxy(c *gin.Context) {
 	}
 	defer resp.Body.Close()
 
-	// Copy the response body to our response writer
-	_, err = io.Copy(c.Writer, resp.Body)
+	// 限制响应体大小（最多 8MB），避免被当成任意大流量读取的放大器
+	const maxImageBytes = 8 << 20
+	_, err = io.Copy(c.Writer, io.LimitReader(resp.Body, maxImageBytes))
 	if err != nil {
 		http.Error(c.Writer, "Failed to copy image", http.StatusInternalServerError)
 		log.Printf("Error copying image: %v", err)

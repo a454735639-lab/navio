@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/go-acme/lego/v4/certcrypto"
@@ -49,6 +50,10 @@ func (u *acmeUser) GetEmail() string                        { return u.Email }
 func (u *acmeUser) GetRegistration() *registration.Resource { return nil }
 func (u *acmeUser) GetPrivateKey() crypto.PrivateKey        { return u.key }
 
+// acmeEnsureMu 串行化所有 ACME 签发，避免并发订单争用同一 .tmp 文件导致
+// 证书与私钥来自不同订单、以及 Let's Encrypt 重复签发限流。
+var acmeEnsureMu sync.Mutex
+
 // acmeProvider 内置 ACME（DNS-01），当前支持 Cloudflare，结构可扩展到其他 provider
 type acmeProvider struct {
 	cfg Config
@@ -57,6 +62,11 @@ type acmeProvider struct {
 func (p *acmeProvider) Name() string { return ProviderACME }
 
 func (p *acmeProvider) Ensure() (string, string, error) {
+	// 串行化整个「检查 + 签发」过程：Apply 初次签发与续期循环可能并发进入，
+	// 必须持有同一把锁，否则会并发走完整订单并争用证书文件。
+	acmeEnsureMu.Lock()
+	defer acmeEnsureMu.Unlock()
+
 	certFile, keyFile := p.paths()
 
 	// 证书仍有效（剩余 > 30 天）则直接复用
@@ -102,7 +112,8 @@ func (p *acmeProvider) issue(certFile, keyFile string) error {
 	if err != nil {
 		return fmt.Errorf("dns token unavailable: %w", err)
 	}
-	if strings.ToLower(p.cfg.DNSProvider) != ProviderPath && strings.ToLower(p.cfg.DNSProvider) != "cloudflare" {
+	// ProviderPath 是证书来源而非 DNS 服务商，只有 cloudflare 是合法的 DNS-01 provider
+	if strings.ToLower(p.cfg.DNSProvider) != "cloudflare" {
 		return fmt.Errorf("unsupported dns provider: %s", p.cfg.DNSProvider)
 	}
 
@@ -192,11 +203,21 @@ func encodePrivateKey(key any) ([]byte, error) {
 }
 
 func writeFileAtomic(path string, data []byte, perm os.FileMode) error {
-	tmp := path + ".tmp"
-	if err := os.WriteFile(tmp, data, 0o600); err != nil {
+	// 用唯一临时文件名，避免并发签发（不同配置/订单）争用固定 .tmp 相互覆盖
+	tmp, err := os.CreateTemp(filepath.Dir(path), filepath.Base(path)+".tmp-")
+	if err != nil {
 		return err
 	}
-	if err := os.Rename(tmp, path); err != nil {
+	tmpName := tmp.Name()
+	if err := tmp.Close(); err != nil {
+		_ = os.Remove(tmpName)
+		return err
+	}
+	defer os.Remove(tmpName) // Rename 成功后 tmpName 已不存在，Remove 是无害的
+	if err := os.WriteFile(tmpName, data, 0o600); err != nil {
+		return err
+	}
+	if err := os.Rename(tmpName, path); err != nil {
 		return err
 	}
 	// 挂载卷可能带宽松权限，这里强制收敛

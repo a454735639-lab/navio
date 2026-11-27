@@ -53,8 +53,12 @@ async function getIconByUrl(url: string) {
       faviconList.value = data.list
       selectIconModalShow.value = true
     }
-    else {
+    else if (data.list.length === 1) {
       setIconInfo(data.list[0])
+    }
+    else {
+      // 空列表时不要把 undefined 传给下载接口
+      ms.error(t('iconItem.geticonFail'))
     }
   }).catch((res) => {
     if (res.code === -1) {

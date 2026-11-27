@@ -57,16 +57,21 @@ func (p *ItemType) Edit(userId uint, itemIcon models.ItemIcon) (models.ItemIcon,
 		// if itemIcon.Sort != 0 {
 		// 	updateField = append(updateField, "Sort")
 		// }
-		global.Db.Model(&models.ItemIcon{}).
+		// 修复：数据库写入错误必须上抛，否则 openAPI 会误报成功、静默丢数据
+		if err := global.Db.Model(&models.ItemIcon{}).
 			Select(updateField).
-			Where("id=?", itemIcon.ID).Updates(&itemIcon)
+			Where("id=?", itemIcon.ID).Updates(&itemIcon).Error; err != nil {
+			return itemIcon, err
+		}
 	} else {
 		if _, err := p.FindByOnlyName(userId, itemIcon.OnlyName); err == nil && itemIcon.OnlyName != "" {
 			return itemIcon, ErrItemOnlyNameExisted
 		}
 		itemIcon.Sort = 9999
 		// 创建
-		global.Db.Create(&itemIcon)
+		if err := global.Db.Create(&itemIcon).Error; err != nil {
+			return itemIcon, err
+		}
 	}
 
 	return itemIcon, nil
@@ -75,5 +80,12 @@ func (p *ItemType) Edit(userId uint, itemIcon models.ItemIcon) (models.ItemIcon,
 
 func (p *ItemType) FindByOnlyName(userId uint, onlyName string) (res models.ItemIcon, gormErr error) {
 	gormErr = global.Db.First(&res, "only_name=? AND user_id=?", onlyName, userId).Error
+	if gormErr != nil {
+		return
+	}
+	// Icon 字段带 gorm:"-"，不会从数据库自动填充，真实图标存放在 IconJson。
+	// 这里必须解析，否则调用方（尤其 openAPI 的 update/getInfo）拿到零值 Icon，
+	// 写回时会用空图标覆盖 IconJson，造成图标永久丢失。内部 API 的列表接口同样做了此解析。
+	_ = json.Unmarshal([]byte(res.IconJson), &res.Icon)
 	return
 }

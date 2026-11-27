@@ -295,6 +295,7 @@ function handleVisibilityChange() {
 // 网络状态变化 / 页面回到前台时，清缓存并重新判定
 let networkTimer: ReturnType<typeof setInterval> | undefined
 let statusTimer: ReturnType<typeof setInterval> | undefined
+let stopTriggerWatch: (() => void) | undefined
 
 const netStatus = ref(getNetworkStatus())
 
@@ -354,8 +355,8 @@ onMounted(async () => {
 
   statusTimer = setInterval(refreshNetStatus, 2_000)
 
-  // 监听触发更新列表
-  triggerUpdateItemDatas.onTriggered(getList)
+  // 监听触发更新列表（保存 stop 句柄，卸载时清理避免重复请求）
+  stopTriggerWatch = triggerUpdateItemDatas.onTriggered(getList)
   runFooterJSCode()
 
   // 内外网自动识别：网络恢复、页面回到前台时重新探测
@@ -377,8 +378,15 @@ function itemFrontEndSearch(keyword?: string) {
           || item.description?.toLowerCase().includes(keyword?.toLowerCase() ?? '')
         )
       })
-      if (element && element.length > 0)
-        filteredData.push({ items: element, hoverStatus: false, cardStyle: items.value[i].cardStyle, title: items.value[i].title })
+      if (element && element.length > 0) {
+        // 保留 id / onlyName：排序保存与 DOM 锚点依赖这些字段，过滤态丢失会导致保存失效
+        const source = items.value[i]
+        filteredData.push({
+          ...source,
+          items: element,
+          hoverStatus: false,
+        })
+      }
     }
     filterItems.value = filteredData
     // console.log('搜索模式开启')
@@ -416,6 +424,7 @@ onUnmounted(() => {
     clearInterval(networkTimer)
   if (statusTimer)
     clearInterval(statusTimer)
+  stopTriggerWatch?.()
   window.removeEventListener('online', handleNetworkChange)
   window.removeEventListener('offline', handleNetworkChange)
   document.removeEventListener('visibilitychange', handleVisibilityChange)
@@ -542,9 +551,9 @@ onUnmounted(() => {
                 :disabled="!itemGroup.sortStatus"
               >
                 <div
-                  v-for="item, index in itemGroup.items"
+                  v-for="item in itemGroup.items"
                   :id="item.onlyName ? `item-card-name-${item.onlyName}` : ''"
-                  :key="index"
+                  :key="item.id || item.onlyName"
                   :class="item.onlyName ? `item-card-name-${item.onlyName}` : ''"
                 >
                   <ItemCards
@@ -586,9 +595,9 @@ onUnmounted(() => {
                 :disabled="!itemGroup.sortStatus"
               >
                 <div
-                  v-for="item, index in itemGroup.items"
+                  v-for="item in itemGroup.items"
                   :id="item.onlyName ? `item-card-name-${item.onlyName}` : ''"
-                  :key="index"
+                  :key="item.id || item.onlyName"
                   :class="item.onlyName ? `item-card-name-${item.onlyName}` : ''"
                 >
                   <ItemCards

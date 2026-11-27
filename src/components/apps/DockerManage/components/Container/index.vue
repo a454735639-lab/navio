@@ -134,7 +134,8 @@ const createColumns = ({
         let cpu = ''
         let RAM = ''
 
-        if (row.status === DockerContainerInfoState.running) {
+        // 使用 row.state（枚举值）而非 row.status（描述字符串，如 "Up 3 minutes"）
+        if (row.state === DockerContainerInfoState.running) {
           cpu = 'CPU: --'
           RAM = 'RAM: --'
         }
@@ -339,7 +340,7 @@ onUnmounted(() => {
           @after-leave="handleResize"
         >
           {{ dockerState.refreshContainerListErrorMsg }}
-          <a target="_blank" class="text-lime-600" :href="domainLinks.faqLinkWithLang('docker_run_error')">
+          <a target="_blank" rel="noopener noreferrer" class="text-lime-600" :href="domainLinks.faqLinkWithLang('docker_run_error')">
             [{{ t('common.viewSolution') }}]
           </a>
         </NAlert>

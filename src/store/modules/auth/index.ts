@@ -20,7 +20,12 @@ const defaultState: AuthState = {
 }
 
 export const useAuthStore = defineStore('auth-store', {
-  state: (): AuthState => getStorage() || defaultState,
+  // 必须返回 defaultState 的副本：直接返回引用会让 Pinia 的响应式代理把
+  // 模块级 defaultState 本身改成真实 token，导致 removeToken 无法复位。
+  state: (): AuthState => {
+    const stored = getStorage() as AuthState | null
+    return stored ? { ...stored } : { ...defaultState }
+  },
 
   actions: {
     setToken(token: string) {
@@ -43,7 +48,10 @@ export const useAuthStore = defineStore('auth-store', {
     },
 
     removeToken() {
-      this.$state = defaultState
+      // 逐字段复位，避免把被污染的对象引用整体拷回 state
+      this.token = null
+      this.userInfo = null
+      this.visitMode = VisitMode.VISIT_MODE_LOGIN
       hRemoveToken()
     },
   },

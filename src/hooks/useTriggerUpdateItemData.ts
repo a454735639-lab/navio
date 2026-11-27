@@ -11,11 +11,12 @@ export const useTriggerUpdateItemData = () => {
   }
 
   const onTriggered = (callback: () => void) => {
-    // 监听计数器变化并执行回调
-    watch(() => updateCounter.value, () => {
-      // console.log('收到更新信号')
+    // 监听计数器变化并执行回调；返回 stop 句柄供调用方在卸载时清理，
+    // 避免首页反复挂载后残留多个 watch 持有旧闭包、重复触发请求。
+    const stop = watch(() => updateCounter.value, () => {
       callback()
     })
+    return stop
   }
 
   return { triggerUpdate, onTriggered }

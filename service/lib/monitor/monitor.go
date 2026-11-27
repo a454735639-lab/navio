@@ -153,7 +153,12 @@ func isVirtualNetIF(name string) bool {
 	if lower == "lo" || lower == "lo0" {
 		return true
 	}
-	virtualPrefixes := []string{"veth", "br-", "docker", "virbr", "vif", "tap", "tun", "dummy", "kube", "cali", "flannel", "nodelocaldns"}
+	virtualPrefixes := []string{
+		"veth", "br-", "docker", "virbr", "vif", "tap", "tun", "dummy",
+		"kube", "cali", "flannel", "nodelocaldns",
+		// bond 聚合口流量与 slave 网卡重复计数，需排除；隧道/overlay 出口非真实物理流量
+		"bond", "ppp", "wg", "tailscale", "sit", "gre", "ip6tnl",
+	}
 	for _, p := range virtualPrefixes {
 		if strings.HasPrefix(lower, p) {
 			return true
@@ -172,6 +177,11 @@ func GetNetworkInfo() (NetworkInfo, error) {
 	)
 	if _, statErr := os.Stat(HostNetDevPath); statErr == nil {
 		netStats, err = net.IOCountersByFile(true, HostNetDevPath)
+		if err != nil {
+			// 挂载存在但读取失败（权限/格式异常/stale 挂载）时也要回退，
+			// 否则整个网络监控接口直接报错、首页网卡卡片无数据。
+			netStats, err = net.IOCounters(true)
+		}
 	} else {
 		netStats, err = net.IOCounters(true)
 	}

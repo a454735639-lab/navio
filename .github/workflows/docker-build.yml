@@ -22,7 +22,7 @@ jobs:
 
       - uses: docker/setup-qemu-action@v3
         with:
-          platforms: arm64
+          platforms: arm64,amd64
 
       - uses: docker/setup-buildx-action@v3
 
@@ -38,12 +38,12 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ github.repository }}
           tags: |
             type=raw,value=latest
-            type=raw,value=1.8.1-oss-local
+            type=sha,prefix=sha-
 
       - uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/arm64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

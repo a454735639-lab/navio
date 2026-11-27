@@ -87,8 +87,10 @@ function handleLogoutAll() {
     loading: logoutAllLoading.value,
     onPositiveClick: async () => {
       logoutAllLoading.value = true
-      for (let i = 0; i < accountManagerStore.accounts.length; i++) {
-        const element = accountManagerStore.accounts[i]
+      // 遍历快照：handleDeleteItem 会修改 accounts 数组，直接正向遍历会漏掉元素，
+      // 导致部分账号的 logout 请求根本没发出、服务端会话仍有效。
+      const accountsSnapshot = [...accountManagerStore.accounts]
+      for (const element of accountsSnapshot) {
         await logout(element.cToken).then(() => {
           handleDeleteItem(element)
         }).catch((res) => {

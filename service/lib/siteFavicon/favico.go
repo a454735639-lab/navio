@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"sun-panel/lib/cmn"
+	"sun-panel/lib/netguard"
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
@@ -33,15 +34,19 @@ func GetOneFaviconURL(urlStr string) (string, error) {
 	}
 
 	if len(iconURLs) > 0 {
-		return iconURLs[0], fmt.Errorf("not found ico")
+		// 修复：找到图标时应返回 URL + nil，原实现误返回 error 导致真实图标永远被丢弃
+		return iconURLs[0], nil
 	}
 
 	return "", fmt.Errorf("not found ico")
 }
 
-// 获取远程文件的大小
+// 获取远程文件的大小（带 SSRF 防护）
 func GetRemoteFileSize(url string) (int64, error) {
-	resp, err := http.Head(url)
+	if _, err := netguard.ValidateURL(url); err != nil {
+		return 0, err
+	}
+	resp, err := netguard.NewSafeClient(10 * time.Second).Head(url)
 	if err != nil {
 		return 0, err
 	}
@@ -70,8 +75,8 @@ func DownloadImage(url, savePath string, maxSize int64) (*os.File, error) {
 		return nil, fmt.Errorf("文件太大，不下载。大小：%d字节", fileSize)
 	}
 
-	// 发送HTTP GET请求获取图片数据
-	response, err := http.Get(url)
+	// 发送HTTP GET请求获取图片数据（带 SSRF 防护）
+	response, err := netguard.NewSafeClient(10 * time.Second).Get(url)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +131,10 @@ func GetOneFaviconURLAndUpload(urlStr string) (string, bool) {
 func GetFaviconURLs(urlStr string) ([]string, error) {
 	var icons []string
 	icons = make([]string, 0)
-	client := &http.Client{}
+	if _, err := netguard.ValidateURL(urlStr); err != nil {
+		return icons, err
+	}
+	client := netguard.NewSafeClient(10 * time.Second)
 	req, err := http.NewRequest("GET", urlStr, nil)
 	if err != nil {
 		return icons, err

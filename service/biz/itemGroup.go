@@ -21,16 +21,20 @@ func (p *ItemGroupType) Edit(userId uint, itemGroup models.ItemIconGroup) (model
 		// 修改
 		updateFields := []string{"Icon", "Title", "CardStyle", "UserId", "PublicVisitHide", "OnlyName"}
 
-		global.Db.Model(&models.ItemIconGroup{}).
+		if err := global.Db.Model(&models.ItemIconGroup{}).
 			Select(updateFields).
-			Where("id=?", itemGroup.ID).Updates(&itemGroup)
+			Where("id=?", itemGroup.ID).Updates(&itemGroup).Error; err != nil {
+			return itemGroup, err
+		}
 	} else {
 		if _, err := p.FindByOnlyName(userId, itemGroup.OnlyName); err == nil && itemGroup.OnlyName != "" {
 			return itemGroup, ErrItemOnlyNameExisted
 		}
 		itemGroup.Sort = 9999
 		// 创建
-		global.Db.Create(&itemGroup)
+		if err := global.Db.Create(&itemGroup).Error; err != nil {
+			return itemGroup, err
+		}
 	}
 
 	return itemGroup, nil

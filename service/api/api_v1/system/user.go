@@ -72,6 +72,7 @@ func (a *UserApi) UpdateInfo(c *gin.Context) {
 	global.UserToken.Delete(userInfo.Token)
 	if err != nil {
 		apiReturn.ErrorDatabase(c, err.Error())
+		return
 	}
 	apiReturn.Success(c)
 }
@@ -132,9 +133,14 @@ func (a *UserApi) GetReferralCode(c *gin.Context) {
 			referralCode := cmn.BuildRandCode(8, cmn.RAND_CODE_MODE2)
 			global.Logger.Debug("referralCode:", referralCode)
 
-			// 查询是否有重复的
-			if row := global.Db.Find(&userInfo, "referral_code=?", referralCode).RowsAffected; row != 0 {
+			// 查询是否有重复的：用独立的计数变量，避免用 Find(&userInfo, ...) 覆盖当前用户对象；
+			// 同时不再调用 err.Error()（此时 err 为 nil，会导致空指针 panic）。
+			var duplicateCount int64
+			if err := global.Db.Model(&models.User{}).Where("referral_code=?", referralCode).Count(&duplicateCount).Error; err != nil {
 				apiReturn.ErrorDatabase(c, err.Error())
+				return
+			}
+			if duplicateCount != 0 {
 				continue
 			}
 

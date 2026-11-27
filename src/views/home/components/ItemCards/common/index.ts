@@ -203,11 +203,11 @@ export async function detectLanReachable(lanUrl: string, timeout?: number, force
   }
 }
 
-function syncPanelMode(lan: boolean) {
-  const mode = lan ? PanelStateNetworkModeEnum.lan : PanelStateNetworkModeEnum.wan
+function syncPanelMode(lan: boolean, mode?: PanelStateNetworkModeEnum) {
+  const target = mode ?? (lan ? PanelStateNetworkModeEnum.lan : PanelStateNetworkModeEnum.wan)
   // 直接赋值：自动探测结果不必写进本地持久化，避免频繁 IO
-  if (panelState.networkMode !== mode)
-    panelState.networkMode = mode
+  if (panelState.networkMode !== target)
+    panelState.networkMode = target
 }
 
 /** 兼容旧调用的 ping 实现（保留导出，内部逻辑走 probeOrigin） */
@@ -274,7 +274,8 @@ export async function getItemUrl(itemInfo: Panel.ItemInfo, timeout?: number) {
   if (await probeRole('ts', tsProbe)) {
     const tsUrl = wanList.find(u => /^https?:\/\/(100\.|.*\.ts\.net)/i.test(u)) || wanList[0]
     if (tsUrl) {
-      syncPanelMode(true)
+      // Tailscale 命中应设置 tailnet(2)，而非 lan(0)，否则右键菜单/状态显示与探测结果不一致
+      syncPanelMode(true, PanelStateNetworkModeEnum.tailnet)
       return tsUrl
     }
   }

@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
-const root = new URL('..', import.meta.url).pathname
-const net = fs.readFileSync(`${root}/src/components/deskModule/SystemMonitor/AppIconSystemMonitor/Network.vue`, 'utf8')
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
+const root = join(dirname(fileURLToPath(import.meta.url)), '..')
+const net = fs.readFileSync(join(root, 'src/components/deskModule/SystemMonitor/AppIconSystemMonitor/Network.vue'), 'utf8')
 
 // Network card's info-mode primary visual must occupy the same 56px height as
 // the 56px progress ring used by CPU/RAM/Disk cards, so all four cards align.

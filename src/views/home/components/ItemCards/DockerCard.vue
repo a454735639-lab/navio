@@ -369,7 +369,8 @@ async function getContainerStatus(info: Panel.ItemInfo, showLoading?: boolean) {
   if (showLoading)
     loading.value = true
   await getContainerStatusApi<Docker.Container.Stats>(containerId).then(({ data }) => {
-    lastTime.value = data.shotTime || ''
+    // 不要在此提前写 lastTime：updateStats 依赖它做「迟到旧响应」保护，
+    // 提前写入会让 d1 < lt 恒不成立，旧响应覆盖新数据、网速错乱。
     updateStats(info, data)
     badgeMsg.value = ''
     registAndListenContainerStatsUpdate(info)
@@ -703,7 +704,7 @@ onUnmounted(() => {
                         <div class="max-w-[300px]">
                           {{ badgeMsg }}: {{ dockerErrorMsg }}
                           <a
-                            target="_blank" class="text-lime-600"
+                            target="_blank" rel="noopener noreferrer" class="text-lime-600"
                             :href="domainLinks.faqLinkWithLang('docker_card_abnormal')"
                           >
                             [{{ t('common.viewSolution') }}]

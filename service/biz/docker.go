@@ -91,17 +91,23 @@ func (g *DockerType) GetContainerState(containerId string) (dockerApiStructs.Con
 
 	data.CPUPercent = calculateCPUPercentUnix(stats)
 	data.IORead, data.IOWrite = calculateBlockIO(stats.BlkioStats)
+	cacheBytes := stats.MemoryStats.Stats["cache"] // 缓存字节数，展示值与百分比口径都需扣除
 	memUsage := float64(stats.MemoryStats.Usage)
 	data.Memory = memUsage / 1024 / 1024
+	data.Cache = float64(cacheBytes) / 1024 / 1024
 	if stats.MemoryStats.Limit > 0 {
-		// 内存占比沿用 docker stats 口径：usage(含 cache)/limit
-		data.MemoryPercent = memUsage / float64(stats.MemoryStats.Limit) * 100
+		// 与 docker stats 一致：百分比用 (Usage - cache)/Limit，
+		// 与下方展示值 Memory = Usage - cache 保持同一口径
+		data.MemoryPercent = float64(stats.MemoryStats.Usage-cacheBytes) / float64(stats.MemoryStats.Limit) * 100
+		if data.MemoryPercent < 0 {
+			data.MemoryPercent = 0
+		}
 		data.MemoryLimit = float64(stats.MemoryStats.Limit) / 1024 / 1024
 	}
-	if cache, ok := stats.MemoryStats.Stats["cache"]; ok {
-		data.Cache = float64(cache) / 1024 / 1024
-	}
 	data.Memory = data.Memory - data.Cache
+	if data.Memory < 0 {
+		data.Memory = 0
+	}
 	data.NetworkRX, data.NetworkTX = calculateNetwork(stats.Networks)
 	data.ShotTime = stats.Read
 	return data, nil

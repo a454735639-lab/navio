@@ -89,7 +89,8 @@ async function runTest() {
   try {
     const { data } = await testProbe<any>()
     cert.value = data.cert || {}
-    ms.success(`${data.provider} · ${data.certFile}`)
+    // 后端不再回传证书/私钥文件路径（避免泄露文件系统布局），仅显示 provider
+    ms.success(`${data.provider}`)
   }
   catch (e: any) {
     ms.error(e?.msg || String(e))

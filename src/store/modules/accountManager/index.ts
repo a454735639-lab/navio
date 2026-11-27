@@ -33,12 +33,12 @@ export const useAccountManagerStore = defineStore('account-manager-store', {
 
     // 删除账号
     deleteAccount(account: AccountInfo) {
-      for (let i = 0; i < this.accounts.length; i++) {
+      // 从后往前遍历，避免 splice 删除后索引后移漏删相邻匹配项
+      for (let i = this.accounts.length - 1; i >= 0; i--) {
         const element = this.accounts[i]
 
         if (element.username === account.username || element.cToken === account.cToken) {
           this.accounts.splice(i, 1)
-          this.recordState()
         }
       }
       this.recordState()

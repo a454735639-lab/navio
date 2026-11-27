@@ -68,8 +68,10 @@ func (a *ItemIconGroup) GetList(c *gin.Context) {
 			return err
 		}
 
-		// 判断分组是否为空，为空将自动创建默认分组
-		if len(groups) == 0 {
+		// 判断分组是否为空，为空将自动创建默认分组。
+		// 公开访客模式（匿名访问）下只读，不写库：避免匿名请求触发插入与批量更新。
+		isVisit := currentMode == base.VISIT_MODE_PUBLIC
+		if len(groups) == 0 && !isVisit {
 			defaultGroup := models.ItemIconGroup{
 				Title:  "APP",
 				UserId: userInfo.ID,

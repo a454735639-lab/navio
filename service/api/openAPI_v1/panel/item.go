@@ -191,7 +191,11 @@ func (a *Item) GetInfoByOnlyName(c *gin.Context) {
 	}
 
 	itemGroupID := uint(info.ItemIconGroupId)
-	groupInfo, _ := biz.ItemGroup.FindById(userId, itemGroupID)
+	groupInfo, groupErr := biz.ItemGroup.FindById(userId, itemGroupID)
+	groupOnlyName := ""
+	if groupErr == nil {
+		groupOnlyName = groupInfo.OnlyName
+	}
 	resp := types.IconItem{
 		OnlyName:          info.OnlyName,
 		Title:             &info.Title,
@@ -199,8 +203,8 @@ func (a *Item) GetInfoByOnlyName(c *gin.Context) {
 		LanUrl:            &info.LanUrl,
 		Description:       &info.Description,
 		IconUrl:           &info.Icon.Src,
-		ItemGroupID:       &groupInfo.ID,
-		ItemGroupOnlyName: &groupInfo.OnlyName,
+		ItemGroupID:       &itemGroupID,
+		ItemGroupOnlyName: &groupOnlyName,
 	}
 
 	apiReturn.SuccessData(c, resp)

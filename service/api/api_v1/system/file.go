@@ -213,7 +213,7 @@ func (a *FileApi) GetList(c *gin.Context) {
 	data := []map[string]interface{}{}
 	for _, v := range list {
 		// 兼容旧版
-		if len(v.Src) >= 0 && v.Src[0] == '.' {
+		if len(v.Src) > 0 && v.Src[0] == '.' {
 			v.Src = v.Src[1:]
 		} else {
 			v.Src = global.UPLOAD_ROUTE + v.Src
@@ -251,7 +251,7 @@ func (a *FileApi) Deletes(c *gin.Context) {
 			// 兼容旧版
 			var err error
 			var path = ""
-			if len(v.Src) >= 0 && v.Src[0] == '.' {
+			if len(v.Src) > 0 && v.Src[0] == '.' {
 				path = v.Src
 			} else {
 				// 新版的储存方式

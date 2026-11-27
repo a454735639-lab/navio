@@ -36,7 +36,9 @@ function http<T = any>(
 
   const failHandler = (error: Response<Error>) => {
     afterRequest?.()
-    console.error(error)
+    // 仅在开发环境打印，避免生产环境把响应体/敏感信息输出到 console
+    if (import.meta.env.DEV)
+      console.error(error)
     // message.error(t('common.networkError'), {
     //   duration: 50000,
     //   closable: true,

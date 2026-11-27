@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, useAttrs, watch } from 'vue'
+import { computed, nextTick, onUnmounted, useAttrs, watch } from 'vue'
 import { NModal } from 'naive-ui'
 import startDrag from './Drag'
 
@@ -33,14 +33,22 @@ const showModal = computed({
   },
 })
 
+let stopDrag: (() => void) | undefined
+
 watch(() => showModal.value, (v: boolean) => {
+  stopDrag?.()
+  stopDrag = undefined
   if (v && props.move) {
     nextTick(() => {
       const oBox = document.getElementById(modalId)
       const oBar = document.getElementById(modalMoveBarId)
-      startDrag(oBar as HTMLElement, oBox as HTMLElement)
+      stopDrag = startDrag(oBar as HTMLElement, oBox as HTMLElement)
     })
   }
+})
+
+onUnmounted(() => {
+  stopDrag?.()
 })
 
 function getRandomInt(min: number, max: number): number {

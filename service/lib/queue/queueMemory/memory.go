@@ -57,12 +57,14 @@ func (k *Pool) Delete(value interface{}) error {
 func (k *Pool) GetByIndex(index int64, v interface{}) error {
 	k.Lock.RLock()
 	defer k.Lock.RUnlock()
-	if int64(len(k.Values)) >= index {
-		json.Unmarshal(k.Values[index], v)
-		return nil
-	} else {
+	// 修复：index 必须 >=0 且 < len，否则空队列 LPop(0) 或 RPop(-1) 会越界 panic
+	if index < 0 || index >= int64(len(k.Values)) {
 		return errors.New("index non-existent")
 	}
+	if err := json.Unmarshal(k.Values[index], v); err != nil {
+		return err
+	}
+	return nil
 }
 
 // 左-取出并删除
@@ -77,7 +79,10 @@ func (k *Pool) LPop(v interface{}) error {
 
 // 右-取出并删除
 func (k *Pool) RPop(v interface{}) error {
-	index := int64(len(k.Values) - 1)
+	k.Lock.RLock()
+	length := len(k.Values)
+	k.Lock.RUnlock()
+	index := int64(length - 1)
 	if err := k.GetByIndex(index, v); err != nil {
 		return err
 	} else {

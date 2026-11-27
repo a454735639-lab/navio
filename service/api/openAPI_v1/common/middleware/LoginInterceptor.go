@@ -32,6 +32,13 @@ func LoginInterceptor(c *gin.Context) {
 		c.Abort() // 终止执行后续的操作，一般配合return使用
 		return
 	} else {
+		// 校验关联用户状态：停用的用户其旧 OpenAPI token 也不应继续生效，
+		// 与面板登录（login.go 要求 Status==1）保持一致。
+		if OpenApiToken.User.Status != 1 {
+			apiReturn.ErrorByCode(c, apiReturn.ErrCodeTokenExpires)
+			c.Abort()
+			return
+		}
 		c.Set("userInfo", OpenApiToken.User)
 		// global.Logger.Debugln("userInfo", OpenApiToken.User.ID)
 	}

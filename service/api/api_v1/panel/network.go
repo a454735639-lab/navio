@@ -81,10 +81,12 @@ func (a *NetworkApi) TestProbe(c *gin.Context) {
 	}
 	st, _ := provider.Status()
 	info, _ := probe.ParseCertInfo(certFile)
+	// 不回传私钥文件路径（避免泄露服务器文件系统布局）；CertStatus 内的路径字段也一并清空
+	st.CertFile = ""
+	st.KeyFile = ""
+	_ = keyFile
 	apiReturn.SuccessData(c, gin.H{
 		"provider": provider.Name(),
-		"certFile": certFile,
-		"keyFile":  keyFile,
 		"port":     cfg.Port,
 		"cert":     st,
 		"info":     info,
