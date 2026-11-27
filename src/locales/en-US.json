@@ -166,7 +166,14 @@
       "monitor": "Monitor",
       "resourceChart": "Resources",
       "memory": "Memory",
-      "realtime": "Real-time"
+      "realtime": "Real-time",
+      "trafficRank": "Traffic ranking",
+      "totalDownload": "Total download",
+      "totalUpload": "Total upload",
+      "totalAll": "Total traffic",
+      "containerCount": "{n} containers",
+      "trafficTip": "Cumulative traffic counts since each container last started and resets on restart; sourced from docker stats, consistent with the cards.",
+      "loadFailed": "Failed to load"
     },
     "exportImport": {
       "appName": "Export/Import",

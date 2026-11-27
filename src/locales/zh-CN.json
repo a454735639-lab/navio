@@ -166,7 +166,14 @@
       "monitor": "监控",
       "resourceChart": "资源曲线",
       "memory": "内存",
-      "realtime": "实时"
+      "realtime": "实时",
+      "trafficRank": "流量排行",
+      "totalDownload": "总下载",
+      "totalUpload": "总上传",
+      "totalAll": "总流量",
+      "containerCount": "容器数 {n}",
+      "trafficTip": "累积流量自容器上次启动起计，容器重启后清零；来源 docker stats，与卡片数据一致。",
+      "loadFailed": "加载失败"
     },
     "exportImport": {
       "appName": "导出导入",

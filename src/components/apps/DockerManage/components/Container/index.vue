@@ -1,10 +1,11 @@
 <script lang="ts" setup>
 import { h, nextTick, onMounted, onUnmounted, ref } from 'vue'
-import { NAlert, NDataTable, NEllipsis, NTag } from 'naive-ui'
+import { NAlert, NButton, NDataTable, NEllipsis, NTag } from 'naive-ui'
 import type { DataTableColumns } from 'naive-ui'
 import type { ComponentPublicInstance } from 'vue'
 import { useDockerStore } from '../../store/docker'
 import LogViewer from './LogViewer.vue'
+import TrafficRank from './TrafficRank.vue'
 import { RowAction, RowName } from './table'
 import { DockerContainerInfoState } from '@/enums/docker'
 import { t } from '@/locales'
@@ -29,6 +30,9 @@ const editItemInfoShow = ref(false)
 const logDrawerVisible = ref(false)
 const logContainerName = ref('')
 const logContainerId = ref('')
+
+// 流量排行抽屉
+const trafficRankVisible = ref(false)
 
 function openLogDrawer(row: Docker.Container.Info) {
   logContainerName.value = row.name
@@ -341,20 +345,32 @@ onUnmounted(() => {
         </NAlert>
       </div>
 
-      <div class="h-full flex">
-        <NDataTable
-          flex-height
-          :bordered="false"
-          size="small" :data="dockerState.containerList"
-          :columns="columns" :loading="loadingList"
-          :scroll-x="674"
-        />
+      <div class="h-full flex flex-col gap-2">
+        <div class="flex justify-end">
+          <NButton size="small" type="primary" secondary @click="trafficRankVisible = true">
+            <template #icon>
+              <SvgIcon icon="tabler:arrows-sort" />
+            </template>
+            {{ t('apps.dockerManage.trafficRank') }}
+          </NButton>
+        </div>
+        <div class="h-full flex">
+          <NDataTable
+            flex-height
+            :bordered="false"
+            size="small" :data="dockerState.containerList"
+            :columns="columns" :loading="loadingList"
+            :scroll-x="674"
+          />
+        </div>
       </div>
     </div>
 
     <EditItem v-model:visible="editItemInfoShow" :item-info="editItemInfo" is-out-add @done="handleEditSuccess" />
 
     <LogViewer v-model:visible="logDrawerVisible" :container-name="logContainerName" :container-id="logContainerId" />
+
+    <TrafficRank v-model:visible="trafficRankVisible" />
   </div>
 </template>
 

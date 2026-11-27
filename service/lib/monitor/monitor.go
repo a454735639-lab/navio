@@ -1,6 +1,8 @@
 package monitor
 
 import (
+	"os"
+	"strings"
 	"time"
 
 	"github.com/shirou/gopsutil/v4/cpu"
@@ -138,16 +140,47 @@ type NetworkInfo struct {
 	TxBytes uint64 `json:"txBytes"` // 累计发送字节
 }
 
-// GetNetworkInfo 获取全局网络流量累计值（排除回环接口）
+// HostNetDevPath 容器内读取宿主机网络计数的路径。
+// compose 里把宿主机 /proc/net/dev 只读挂载到这里（- /proc/net/dev:/host-net/dev:ro）。
+// 文件不存在（本地裸跑/未挂载）时自动回退到容器自身 netns，功能不退化。
+const HostNetDevPath = "/host-net/dev"
+
+// isVirtualNetIF 判断是否为不应计入主机总流量的虚拟/回环接口。
+// Docker 网桥(bridge/veth/docker0/br-*)会把同一份流量在多张虚拟网卡上重复计数，
+// 必须排除，否则主机汇总被成倍虚高。
+func isVirtualNetIF(name string) bool {
+	lower := strings.ToLower(name)
+	if lower == "lo" || lower == "lo0" {
+		return true
+	}
+	virtualPrefixes := []string{"veth", "br-", "docker", "virbr", "vif", "tap", "tun", "dummy", "kube", "cali", "flannel", "nodelocaldns"}
+	for _, p := range virtualPrefixes {
+		if strings.HasPrefix(lower, p) {
+			return true
+		}
+	}
+	return false
+}
+
+// GetNetworkInfo 获取全局网络流量累计值。
+// 优先读宿主机 /proc/net/dev（真实物理网卡，排除回环与 Docker 虚拟接口），
+// 避免容器 netns 只能看到自己几 MB 的流量、或网桥重复计数。
 func GetNetworkInfo() (NetworkInfo, error) {
-	netStats, err := net.IOCounters(true)
+	var (
+		netStats []net.IOCountersStat
+		err      error
+	)
+	if _, statErr := os.Stat(HostNetDevPath); statErr == nil {
+		netStats, err = net.IOCountersByFile(true, HostNetDevPath)
+	} else {
+		netStats, err = net.IOCounters(true)
+	}
 	if err != nil {
 		return NetworkInfo{}, err
 	}
 	var info NetworkInfo
 	for _, v := range netStats {
-		// 排除回环接口
-		if v.Name == "lo" || v.Name == "lo0" {
+		if isVirtualNetIF(v.Name) {
 			continue
 		}
 		info.RxBytes += v.BytesRecv
