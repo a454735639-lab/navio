@@ -12,9 +12,20 @@ interface Prop {
   cardTypeStyle: PanelPanelConfigStyleEnum
   infoCardLeftText?: string
   infoCardRightText?: string
+  /** 警告阈值（百分比），0 或未设置表示不启用 */
+  warningThreshold?: number
+  /** 超过阈值时的颜色 */
+  warningColor?: string
 }
 
-const props = defineProps<Prop>()
+const props = withDefaults(defineProps<Prop>(), {
+  warningThreshold: 0,
+  warningColor: '#ef4444',
+})
+
+// 超过阈值时整卡（弧线 + 中心数字）切换为警告色
+const isWarning = computed(() => props.warningThreshold > 0 && props.percentage >= props.warningThreshold)
+const activeColor = computed(() => isWarning.value ? props.warningColor : props.progressColor)
 
 // 1Panel 风格环形仪表：圆头进度弧 + 中心大号百分比 + 下方标题/数值
 const R = 42
@@ -39,17 +50,17 @@ const displayInt = computed(() => {
         <svg viewBox="0 0 100 100" style="width: 100%; height: 100%;">
           <circle cx="50" cy="50" :r="R" fill="none" :stroke="progressRailColor" stroke-width="8" stroke-opacity="0.3" />
           <circle
-            cx="50" cy="50" :r="R" fill="none" :stroke="progressColor" stroke-width="8"
+            cx="50" cy="50" :r="R" fill="none" :stroke="activeColor" stroke-width="8"
             stroke-linecap="round" :stroke-dasharray="CIRC" :stroke-dashoffset="dashOffset"
             transform="rotate(-90 50 50)"
           />
         </svg>
-        <div class="absolute inset-0 flex items-center justify-center" :style="{ color: textColor }">
+        <div class="absolute inset-0 flex items-center justify-center" :style="{ color: isWarning ? activeColor : textColor }">
           <span style="font-size: 15px; font-weight: 600; line-height: 1;">{{ displayInt }}</span>
           <span style="font-size: 9px; margin-left: 1px; margin-bottom: 5px;">%</span>
         </div>
       </div>
-      <div class="mt-1 text-sm font-medium text-center w-full px-1" :style="{ color: textColor }">
+      <div class="mt-1 text-sm font-medium text-center w-full px-1" :style="{ color: isWarning ? activeColor : textColor }">
         <NEllipsis>{{ infoCardLeftText }}</NEllipsis>
       </div>
       <div class="text-xs opacity-60 text-center w-full px-1 mt-[2px]" :style="{ color: textColor }">
@@ -63,12 +74,12 @@ const displayInt = computed(() => {
         <svg viewBox="0 0 100 100" style="width: 100%; height: 100%;">
           <circle cx="50" cy="50" :r="R" fill="none" :stroke="progressRailColor" stroke-width="10" stroke-opacity="0.3" />
           <circle
-            cx="50" cy="50" :r="R" fill="none" :stroke="progressColor" stroke-width="10"
+            cx="50" cy="50" :r="R" fill="none" :stroke="activeColor" stroke-width="10"
             stroke-linecap="round" :stroke-dasharray="CIRC" :stroke-dashoffset="dashOffset"
             transform="rotate(-90 50 50)"
           />
         </svg>
-        <div class="absolute inset-0 flex items-center justify-center" style="font-size: 11px;" :style="{ color: textColor }">
+        <div class="absolute inset-0 flex items-center justify-center" style="font-size: 11px;" :style="{ color: isWarning ? activeColor : textColor }">
           {{ Math.round(percentage) }}%
         </div>
       </div>

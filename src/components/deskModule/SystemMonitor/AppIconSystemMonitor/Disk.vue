@@ -15,6 +15,8 @@ interface Prop {
   progressRailColor: string
   path: string
   title: string
+  warningThreshold?: number
+  warningColor?: string
 }
 
 const props = defineProps<Prop>()
@@ -61,6 +63,7 @@ onUnmounted(() => {
         :card-type-style="cardTypeStyle"
         :info-card-right-text="sizePairText(diskState?.used || 0, diskState?.total || 0)"
         :info-card-left-text="title || diskState?.mountpoint" :text-color="textColor" class="cursor-pointer"
+        :warning-threshold="warningThreshold" :warning-color="warningColor"
       />
     </template>
 

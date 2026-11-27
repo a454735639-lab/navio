@@ -42,6 +42,10 @@ const LIGHT_TEXT = '#2b3245'
 const LIGHT_PROGRESS = '#3b82f6'
 const LIGHT_RAIL = '#e8edf5'
 
+// 阈值配色（兼容旧配置未设置警告色的情况）
+const warningThreshold = computed(() => props.extendParam?.warningThreshold ?? 0)
+const warningColor = computed(() => props.extendParam?.warningColor || '#ef4444')
+
 </script>
 
 <template>
@@ -76,6 +80,8 @@ const LIGHT_RAIL = '#e8edf5'
             :progress-rail-color="LIGHT_RAIL"
             :text-color="LIGHT_TEXT"
             :refresh-interval="refreshInterval"
+            :warning-threshold="warningThreshold"
+            :warning-color="warningColor"
           />
           <Memory
             v-else-if="monitorType === MonitorType.memory"
@@ -84,6 +90,8 @@ const LIGHT_RAIL = '#e8edf5'
             :progress-rail-color="LIGHT_RAIL"
             :text-color="LIGHT_TEXT"
             :refresh-interval="refreshInterval"
+            :warning-threshold="warningThreshold"
+            :warning-color="warningColor"
           />
           <Disk
             v-else-if="monitorType === MonitorType.disk"
@@ -94,6 +102,8 @@ const LIGHT_RAIL = '#e8edf5'
             :path="extendParam?.path"
             :title="extendParam?.title"
             :refresh-interval="refreshInterval"
+            :warning-threshold="warningThreshold"
+            :warning-color="warningColor"
           />
           <Network
             v-else-if="monitorType === MonitorType.network"
@@ -102,6 +112,8 @@ const LIGHT_RAIL = '#e8edf5'
             :progress-rail-color="LIGHT_RAIL"
             :text-color="LIGHT_TEXT"
             :refresh-interval="refreshInterval"
+            :warning-threshold="warningThreshold"
+            :warning-color="warningColor"
           />
         </div>
       </template>
@@ -113,6 +125,8 @@ const LIGHT_RAIL = '#e8edf5'
           :progress-rail-color="LIGHT_RAIL"
           :text-color="LIGHT_TEXT"
           :refresh-interval="refreshInterval"
+          :warning-threshold="warningThreshold"
+          :warning-color="warningColor"
         />
         <Memory
           v-else-if="monitorType === MonitorType.memory"
@@ -121,6 +135,8 @@ const LIGHT_RAIL = '#e8edf5'
           :progress-rail-color="LIGHT_RAIL"
           :text-color="LIGHT_TEXT"
           :refresh-interval="refreshInterval"
+          :warning-threshold="warningThreshold"
+          :warning-color="warningColor"
         />
         <Disk
           v-else-if="monitorType === MonitorType.disk"
@@ -131,6 +147,8 @@ const LIGHT_RAIL = '#e8edf5'
           :path="extendParam?.path"
           :title="extendParam?.title"
           :refresh-interval="refreshInterval"
+          :warning-threshold="warningThreshold"
+          :warning-color="warningColor"
         />
         <Network
           v-else-if="monitorType === MonitorType.network"
@@ -139,6 +157,8 @@ const LIGHT_RAIL = '#e8edf5'
           :progress-rail-color="LIGHT_RAIL"
           :text-color="LIGHT_TEXT"
           :refresh-interval="refreshInterval"
+          :warning-threshold="warningThreshold"
+          :warning-color="warningColor"
         />
       </template>
     </GenericMonitorCard>

@@ -27,6 +27,10 @@ export interface GenericProgressStyleExtendParam {
   progressRailColor: string
   color: string
   backgroundColor: string
+  /** 警告阈值：CPU/内存/磁盘为百分比(0-100)，网络为 KB/s。0 或不填表示不启用 */
+  warningThreshold?: number
+  /** 达到/超过阈值时使用的警告色 */
+  warningColor?: string
 }
 
 export interface DiskExtendParam extends GenericProgressStyleExtendParam {

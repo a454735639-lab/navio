@@ -25,6 +25,8 @@ const defaultGenericProgressStyleExtendParam: GenericProgressStyleExtendParam = 
   progressRailColor: '#CFCFCFA8',
   color: '#fff',
   backgroundColor: '#2a2a2a6b',
+  warningThreshold: 0,
+  warningColor: '#ef4444',
 }
 
 const defaultDiskExtendParam: DiskExtendParam = {
@@ -32,6 +34,8 @@ const defaultDiskExtendParam: DiskExtendParam = {
   progressRailColor: '#CFCFCFA8',
   color: '#fff',
   backgroundColor: '#2a2a2a6b',
+  warningThreshold: 0,
+  warningColor: '#ef4444',
   path: '',
   title: '',
 }
@@ -158,6 +162,7 @@ async function handleSubmit() {
           </div>
           <GenericProgressStyleEditor
             v-model:genericProgressStyleExtendParam="currentGenericProgressStyleExtendParam"
+            threshold-unit="speed"
           />
         </NTabPane>
       </NTabs>

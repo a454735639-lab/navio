@@ -443,7 +443,12 @@
       "totalRecv": "累计接收",
       "networkState": "网络",
       "networkTip": "显示全局实时上传 / 下载速度",
-      "network": "网络"
+      "network": "网络",
+      "warningThreshold": "警告阈值",
+      "warningColor": "警告颜色",
+      "thresholdPlaceholder": "0 = 不启用",
+      "thresholdTipPercent": "超过该百分比时卡片显示警告色，0 表示不启用",
+      "thresholdTipSpeed": "上/下行速度任一超过该值（KB/s）时显示警告色，0 表示不启用"
     }
   },
   "form": {

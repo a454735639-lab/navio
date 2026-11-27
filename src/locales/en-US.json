@@ -443,7 +443,12 @@
       "totalRecv": "Total Recv",
       "networkState": "Network",
       "networkTip": "Show global realtime upload / download speed",
-      "network": "Network"
+      "network": "Network",
+      "warningThreshold": "Warning threshold",
+      "warningColor": "Warning color",
+      "thresholdPlaceholder": "0 = disabled",
+      "thresholdTipPercent": "Card turns warning color when usage exceeds this percentage; 0 disables it",
+      "thresholdTipSpeed": "Card turns warning color when upload or download exceeds this value (KB/s); 0 disables it"
     }
   },
   "form": {

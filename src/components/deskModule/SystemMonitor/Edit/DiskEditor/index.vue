@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import type { FormInst, FormRules } from 'naive-ui'
-import { NColorPicker, NForm, NFormItem, NGrid, NGridItem, NInput, NSelect } from 'naive-ui'
+import { NColorPicker, NForm, NFormItem, NGrid, NGridItem, NInput, NInputNumber, NSelect } from 'naive-ui'
 import type { DiskExtendParam } from '../../typings'
 import GenericMonitorCard from '../../components/GenericMonitorCard/index.vue'
 import GenericProgress from '../../components/GenericProgress/index.vue'
@@ -38,6 +38,17 @@ const extendParam = computed({
     emit('update:diskExtendParam', visible)
   },
 })
+
+// 兼容旧配置（无阈值字段）
+const threshold = computed(() => props.diskExtendParam.warningThreshold ?? 0)
+const warningColor = computed(() => props.diskExtendParam.warningColor || '#ef4444')
+
+function updateThreshold(value: number | null) {
+  extendParam.value = { ...extendParam.value, warningThreshold: value ?? 0 }
+}
+function updateWarningColor(value: string) {
+  extendParam.value = { ...extendParam.value, warningColor: value }
+}
 
 async function getMountPointList() {
   try {
@@ -104,6 +115,7 @@ defineExpose({
               :progress-rail-color="extendParam.progressRailColor" :percentage="50" :progress-height="5"
               info-card-left-text="DEMO" info-card-right-text="TEXT" :text-color="extendParam.color"
               :card-type-style="PanelPanelConfigStyleEnum.info"
+              :warning-threshold="threshold || 51" :warning-color="warningColor"
             />
           </template>
         </GenericMonitorCard>
@@ -170,7 +182,25 @@ defineExpose({
             />
           </NFormItem>
         </NGridItem>
+        <NGridItem>
+          <NFormItem :label="$t('deskModule.systemMonitor.warningThreshold')">
+            <NInputNumber
+              :value="threshold" :min="0" :max="100" :step="1" size="small" style="width: 100%;"
+              :placeholder="$t('deskModule.systemMonitor.thresholdPlaceholder')"
+              @update:value="updateThreshold"
+            />
+          </NFormItem>
+        </NGridItem>
+        <NGridItem>
+          <NFormItem :label="$t('deskModule.systemMonitor.warningColor')">
+            <NColorPicker
+              :value="warningColor" :swatches="defautSwatchesBackground" :modes="['hex']"
+              size="small" @update:value="updateWarningColor"
+            />
+          </NFormItem>
+        </NGridItem>
       </NGrid>
+      <div class="text-xs opacity-60 mt-1">{{ $t('deskModule.systemMonitor.thresholdTipPercent') }}</div>
     </NForm>
   </div>
 </template>

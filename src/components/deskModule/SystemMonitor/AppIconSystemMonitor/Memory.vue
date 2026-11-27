@@ -13,6 +13,8 @@ interface Prop {
   textColor: string
   progressColor: string
   progressRailColor: string
+  warningThreshold?: number
+  warningColor?: string
 }
 
 const props = defineProps<Prop>()
@@ -55,6 +57,7 @@ onUnmounted(() => {
         :card-type-style="cardTypeStyle"
         :info-card-right-text="sizePairText(memoryState?.used || 0, memoryState?.total || 0)"
         info-card-left-text="RAM" :text-color="textColor" class="cursor-pointer"
+        :warning-threshold="warningThreshold" :warning-color="warningColor"
       />
     </template>
 

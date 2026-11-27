@@ -12,6 +12,8 @@ interface Prop {
   textColor: string
   progressColor: string
   progressRailColor: string
+  warningThreshold?: number
+  warningColor?: string
 }
 
 const props = defineProps<Prop>()
@@ -49,6 +51,7 @@ onUnmounted(() => {
         :percentage="correctionNumberByCardStyle(allCPUUsages(cpuState), cardTypeStyle)"
         :card-type-style="cardTypeStyle" :info-card-right-text="`${correctionNumber(allCPUUsages(cpuState))}%`"
         info-card-left-text="CPU" :text-color="textColor" style="width: 100%;" class="cursor-pointer"
+        :warning-threshold="warningThreshold" :warning-color="warningColor"
       />
     </template>
 
