@@ -673,17 +673,20 @@ onUnmounted(() => {
                   </NEllipsis>
                 </div>
                 <div v-if="!iconTextInfoHideDescription" class="app-icon-info-text-box-description">
-                  <NEllipsis v-if="loading" :line-clamp="2" class="text-xs">
+                  <NEllipsis v-if="loading" :line-clamp="1" class="text-xs opacity-70">
                     loading...
                   </NEllipsis>
                   <NEllipsis
-                    v-else-if="containerState.runStatus === DockerContainerInfoState.running" :line-clamp="2"
-                    class="text-xs"
+                    v-else-if="containerState.runStatus === DockerContainerInfoState.running" :line-clamp="1"
+                    class="text-xs opacity-75"
                   >
-                    CPU:{{ roundNumberToOneDecimalPlaces(containerState.cpuPercent) }}%
-                    RAM:{{ formatMemory(containerState.memory) }}
-                    <br>
-                    <span class="opacity-70">↑{{ formatNetSpeed(netSpeed.tx) }} ↓{{ formatNetSpeed(netSpeed.rx) }}</span>
+                    <span class="tabular-nums">{{ roundNumberToOneDecimalPlaces(containerState.cpuPercent) }}%</span>
+                    <span class="mx-1 opacity-40">·</span>
+                    <span class="tabular-nums">{{ formatMemory(containerState.memory) }}</span>
+                    <template v-if="netSpeed.tx > 0 || netSpeed.rx > 0">
+                      <span class="mx-1 opacity-40">·</span>
+                      <span class="tabular-nums">↑{{ formatNetSpeed(netSpeed.tx) }} ↓{{ formatNetSpeed(netSpeed.rx) }}</span>
+                    </template>
                   </NEllipsis>
                   <NEllipsis
                     v-else-if="containerState.runStatus === DockerContainerInfoState.restarting"

@@ -553,12 +553,12 @@ onUnmounted(() => {
 
         <!-- 应用盒子 -->
         <div id="item-card-box" :style="{ marginLeft: `${panelState.panelConfig.marginX}px`, marginRight: `${panelState.panelConfig.marginX}px` }">
-          <!-- 系统监控状态 -->
+          <!-- 系统监控状态：独立呈现，不再套一层分组玻璃（避免玻璃叠玻璃显得厚重） -->
           <div
             v-if="panelState.panelConfig.systemMonitorShow
               && ((panelState.panelConfig.systemMonitorPublicVisitModeShow && authStore.visitMode === VisitMode.VISIT_MODE_PUBLIC)
                 || authStore.visitMode === VisitMode.VISIT_MODE_LOGIN)"
-            class="item-list group-glass mt-[28px] group-enter"
+            class="item-list mt-[18px] group-enter"
           >
             <SystemMonitor
               :allow-edit="authStore.visitMode === VisitMode.VISIT_MODE_LOGIN"
@@ -570,10 +570,10 @@ onUnmounted(() => {
             <Loading />
           </div>
 
-          <!-- 分组总控：全部收起 / 全部展开（仅在有分组时出现） -->
+          <!-- 分组总控：悬浮在右上角的小图标，不额外占用一整行 -->
           <div
             v-if="!itemCardsLoading && filterItems.length > 1"
-            class="flex justify-end mt-[18px]"
+            class="flex justify-end mt-[14px] mb-[-6px]"
           >
             <button
               type="button"
@@ -582,11 +582,10 @@ onUnmounted(() => {
               @click="toggleAllGroups"
             >
               <SvgIcon
-                class="collapse-arrow mr-1"
+                class="collapse-arrow"
                 :class="{ 'is-collapsed': allCollapsed }"
-                icon="mdi:chevron-down"
+                icon="mdi:unfold-less-horizontal"
               />
-              <span>{{ allCollapsed ? $t('panelHome.expandAllGroups') : $t('panelHome.collapseAllGroups') }}</span>
             </button>
           </div>
 
@@ -594,7 +593,7 @@ onUnmounted(() => {
           <div
             v-for="(itemGroup, itemGroupIndex) in filterItems" :id="`item-group-${itemGroup.onlyName}`"
             :key="itemGroupIndex"
-            class="item-list group-glass mt-[28px] group-enter"
+            class="item-list group-glass mt-[18px] group-enter"
             :style="{ animationDelay: `${Math.min(itemGroupIndex, 8) * 60}ms` }"
             :class="`item-group-${itemGroup.onlyName} item-group-index-${itemGroupIndex} ${itemGroup.sortStatus ? (`border shadow-[0_8px_30px_rgba(0,0,0,0.3)] p-[16px] rounded-2xl `) : ''}`"
             @mouseenter="handleSetHoverStatus(itemGroupIndex, true)"
@@ -923,10 +922,10 @@ html {
    半透明渐变底 + 强模糊高饱和 + 顶部弧形高光 + 1px 边缘折射 */
 .group-glass {
   position: relative;
-  padding: 18px 20px 20px;
-  margin-left: -20px;
-  margin-right: -20px;
-  border-radius: 20px;
+  padding: 15px 17px 17px;
+  margin-left: -17px;
+  margin-right: -17px;
+  border-radius: 18px;
   background: linear-gradient(155deg,
       rgba(255, 255, 255, .16) 0%,
       rgba(255, 255, 255, .07) 46%,
@@ -1069,31 +1068,28 @@ html {
   transform: translateY(-6px);
 }
 
-/* 全部收起/展开按钮：液态玻璃胶囊 */
+/* 全部收起/展开：极简圆形图标按钮，不抢视线 */
 .collapse-all-btn {
   display: inline-flex;
   align-items: center;
-  padding: 6px 13px 6px 9px;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, .22);
-  background: linear-gradient(155deg, rgba(255, 255, 255, .20), rgba(255, 255, 255, .09));
-  color: rgba(255, 255, 255, .9);
-  font-size: 12px;
-  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, .18);
+  background: rgba(255, 255, 255, .10);
+  color: rgba(255, 255, 255, .78);
   cursor: pointer;
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  box-shadow:
-    0 10px 26px -12px rgba(0, 0, 0, .48),
-    inset 0 1px 0 rgba(255, 255, 255, .30),
-    inset 0 -1px 0 rgba(255, 255, 255, .08);
-  transition: background .18s, color .18s, border-color .18s, transform .18s;
+  backdrop-filter: blur(20px) saturate(175%);
+  -webkit-backdrop-filter: blur(20px) saturate(175%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22);
+  transition: background .18s, color .18s, border-color .18s;
 }
 .collapse-all-btn:hover {
-  background: linear-gradient(155deg, rgba(255, 255, 255, .30), rgba(255, 255, 255, .14));
+  background: rgba(255, 255, 255, .22);
   color: #fff;
-  border-color: rgba(255, 255, 255, .34);
-  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, .30);
 }
 
 /* Pass motion: 分组依次淡入，仅首次加载，不干扰拖拽 */
@@ -1121,15 +1117,15 @@ html {
 .icon-info-box {
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(196px, 1fr));
+  gap: 10px;
 }
 
 .icon-small-box {
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(74px, 1fr));
+  gap: 14px;
 
 }
 

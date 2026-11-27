@@ -254,45 +254,65 @@ onUnmounted(() => {
 </style>
 
 <style>
-/* Liquid Glass：设置弹窗本体 —— 覆盖 Naive preset card 的纯色底
-   注意：class 落在 NModal 外层容器上，n-card 在其内部，必须用后代选择器 */
-.app-starter-modal .n-card {
-  background: linear-gradient(155deg, rgba(255, 255, 255, .78) 0%, rgba(255, 255, 255, .58) 100%);
-  border: 1px solid rgba(255, 255, 255, .85);
-  backdrop-filter: blur(40px) saturate(190%);
-  -webkit-backdrop-filter: blur(40px) saturate(190%);
+/* Liquid Glass：设置弹窗本体
+   Naive 的 Card 用 CSS 变量 --n-color-modal 上色，且 asModal() 生成的
+   `.n-card.n-modal` 规则在样式表中注入得更晚，单纯写 background 会被盖掉。
+   所以这里直接覆写 CSS 变量 + 提高选择器权重，双保险。 */
+.app-starter-modal.n-card.n-modal,
+.app-starter-modal.n-card {
+  --n-color: transparent;
+  --n-color-modal: transparent;
+  --n-color-popover: transparent;
+  --n-color-embedded: transparent;
+  --n-color-embedded-modal: transparent;
+  --n-border-color: transparent;
+  background: linear-gradient(155deg, rgba(255, 255, 255, .72) 0%, rgba(255, 255, 255, .52) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, .85) !important;
+  backdrop-filter: blur(44px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(44px) saturate(190%) !important;
   box-shadow:
     0 36px 80px -24px rgba(8, 14, 32, .48),
     0 10px 28px -12px rgba(8, 14, 32, .26),
     inset 0 1px 0 rgba(255, 255, 255, .95),
-    inset 0 -1px 1px rgba(255, 255, 255, .45);
+    inset 0 -1px 1px rgba(255, 255, 255, .45) !important;
 }
 
-.dark .app-starter-modal .n-card {
-  background: linear-gradient(155deg, rgba(255, 255, 255, .10) 0%, rgba(255, 255, 255, .045) 100%);
-  border-color: rgba(255, 255, 255, .16);
+.dark .app-starter-modal.n-card.n-modal,
+.dark .app-starter-modal.n-card {
+  --n-color: transparent;
+  --n-color-modal: transparent;
+  --n-color-popover: transparent;
+  --n-color-embedded: transparent;
+  --n-color-embedded-modal: transparent;
+  --n-border-color: transparent;
+  background: linear-gradient(155deg, rgba(255, 255, 255, .11) 0%, rgba(255, 255, 255, .05) 100%) !important;
+  border-color: rgba(255, 255, 255, .16) !important;
   box-shadow:
     0 36px 80px -22px rgba(0, 0, 0, .80),
     0 10px 28px -12px rgba(0, 0, 0, .48),
     inset 0 1px 0 rgba(255, 255, 255, .18),
-    inset 0 -1px 1px rgba(255, 255, 255, .06);
+    inset 0 -1px 1px rgba(255, 255, 255, .06) !important;
 }
 
-/* 弹窗内部布局容器透明化，让玻璃透出来 */
+/* 弹窗内部所有布局容器透明，让玻璃透出来 */
+.app-starter-modal-content,
 .app-starter-modal-content .n-layout,
 .app-starter-modal-content .n-layout-sider,
-.app-starter-modal-content .n-layout-content {
-  background-color: transparent;
+.app-starter-modal-content .n-layout-content,
+.app-starter-modal .n-card__content,
+.app-starter-modal .n-card-header,
+.app-starter-modal .n-card__footer {
+  background-color: transparent !important;
 }
 
 /* 不支持 backdrop-filter 时退回实心，保证可读 */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .app-starter-modal .n-card {
-    background: #fff;
+  .app-starter-modal.n-card {
+    background: #fff !important;
   }
 
-  .dark .app-starter-modal .n-card {
-    background: #1c202c;
+  .dark .app-starter-modal.n-card {
+    background: #1c202c !important;
   }
 }
 </style>

@@ -133,27 +133,45 @@ body {
     border-color: rgba(255, 255, 255, .10);
 }
 
-/* 内容卡片：液态玻璃。Naive 的 NCard 自带底色，需要覆盖掉 */
+/* 内容卡片：液态玻璃。
+   Naive 的 Card 通过 --n-color / --n-color-modal 上色，直接写 background
+   会被后注入的 .n-card.n-modal 规则覆盖，所以必须连变量一起覆写。 */
 .app-card.n-card {
-    background: linear-gradient(155deg, rgba(255, 255, 255, .70) 0%, rgba(255, 255, 255, .48) 100%);
-    border: 1px solid rgba(255, 255, 255, .80);
+    --n-color: transparent;
+    --n-color-modal: transparent;
+    --n-color-popover: transparent;
+    --n-color-embedded: transparent;
+    --n-border-color: transparent;
+    background: linear-gradient(155deg, rgba(255, 255, 255, .68) 0%, rgba(255, 255, 255, .46) 100%) !important;
+    border: 1px solid rgba(255, 255, 255, .80) !important;
     backdrop-filter: blur(26px) saturate(180%);
     -webkit-backdrop-filter: blur(26px) saturate(180%);
     box-shadow:
         0 16px 40px -18px rgba(8, 14, 32, .26),
         0 4px 12px -6px rgba(8, 14, 32, .12),
         inset 0 1px 0 rgba(255, 255, 255, .90),
-        inset 0 -1px 0 rgba(255, 255, 255, .40);
+        inset 0 -1px 0 rgba(255, 255, 255, .40) !important;
+}
+
+.app-card .n-card__content,
+.app-card .n-card-header,
+.app-card .n-card__footer {
+    background-color: transparent !important;
 }
 
 .dark .app-card.n-card {
-    background: linear-gradient(155deg, rgba(255, 255, 255, .09) 0%, rgba(255, 255, 255, .04) 100%);
-    border-color: rgba(255, 255, 255, .14);
+    --n-color: transparent;
+    --n-color-modal: transparent;
+    --n-color-popover: transparent;
+    --n-color-embedded: transparent;
+    --n-border-color: transparent;
+    background: linear-gradient(155deg, rgba(255, 255, 255, .09) 0%, rgba(255, 255, 255, .04) 100%) !important;
+    border-color: rgba(255, 255, 255, .14) !important;
     box-shadow:
         0 16px 40px -18px rgba(0, 0, 0, .62),
         0 4px 12px -6px rgba(0, 0, 0, .34),
         inset 0 1px 0 rgba(255, 255, 255, .16),
-        inset 0 -1px 0 rgba(255, 255, 255, .05);
+        inset 0 -1px 0 rgba(255, 255, 255, .05) !important;
 }
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
@@ -166,11 +184,11 @@ body {
     }
 
     .app-card.n-card {
-        background: #fff;
+        background: #fff !important;
     }
 
     .dark .app-card.n-card {
-        background: #1c202c;
+        background: #1c202c !important;
     }
 }
 
