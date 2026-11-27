@@ -23,6 +23,7 @@ import { VisitMode } from '@/enums/auth'
 import { apiRespErrMsg } from '@/utils/cmn/apiMessage'
 import { bytesToSize } from '@/utils/cmn'
 import { useDomainLinks } from '@/hooks/useDomainLinks'
+import LogViewer from '@/components/apps/DockerManage/components/Container/LogViewer.vue'
 
 interface Prop {
   itemInfo: Panel.ItemInfo
@@ -67,6 +68,9 @@ const operationLoading = ref(false) // 操作的loading 启动或者关闭容器
 const badgeMsg = ref('')
 const dockerErrorMsg = ref('')
 const lastTime = ref('')
+const monitorVisible = ref(false) // 首页 Docker 卡右键「监控」打开的日志/资源抽屉
+const monitorContainerId = computed(() => String(itemCardInfo.value?.expandParam?.containerId || ''))
+const monitorContainerName = computed(() => String(itemCardInfo.value?.expandParam?.containerName || itemCardInfo.value?.title || ''))
 
 const containerState = ref<Docker.Container.Stats>({
   cpuPercent: 0,
@@ -214,6 +218,9 @@ function handleRightMenuSelect(key: string | number) {
     case 'stopContainer':
       execSwitchAction(false)
       break
+    case 'monitor':
+      monitorVisible.value = true
+      break
     case 'edit':
       emit('edit')
       break
@@ -261,6 +268,10 @@ function getDropdownMenuOptions() {
       {
         label: t('iconItem.dockerAction.stopContainer'),
         key: 'stopContainer',
+      },
+      {
+        label: t('iconItem.dockerAction.viewMonitor'),
+        key: 'monitor',
       },
       {
         type: 'divider',
@@ -449,7 +460,7 @@ function updateStats(info: Panel.ItemInfo, data: Docker.Container.Stats) {
   }
 
   if (containerState.value.runStatus) {
-    describeText.value = `CPU:${roundNumberToTwoDecimalPlaces(containerState.value.cpuPercent)}% RAM:${bytesToSize(containerState.value.memory * 1024 * 1024)}`
+    describeText.value = `CPU:${roundNumberToTwoDecimalPlaces(containerState.value.cpuPercent)}% RAM:${bytesToSize(containerState.value.memory * 1024 * 1024)}\n实时 ↑${formatNetSpeed(netSpeed.tx)} ↓${formatNetSpeed(netSpeed.rx)}\n累积 ↑${bytesToSize(containerState.value.networkTX * 1024)} ↓${bytesToSize(containerState.value.networkRX * 1024)}`
     // 设置徽章的颜色
     switch (containerState.value.runStatus) {
       case DockerContainerInfoState.running:
@@ -718,6 +729,13 @@ onUnmounted(() => {
 
     <!-- 弹窗 -->
     <IframeLayer v-model:show="windowShow" :title="windowTitle" :src="windowSrc" move resize />
+
+    <!-- 右键「监控」：日志 + 资源曲线抽屉 -->
+    <LogViewer
+      v-model:visible="monitorVisible"
+      :container-id="monitorContainerId"
+      :container-name="monitorContainerName"
+    />
 
     <!-- 旧弹窗 -->
     <!-- <NModal

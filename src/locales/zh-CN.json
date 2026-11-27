@@ -460,7 +460,8 @@
       "restartContainer": "重启容器",
       "restartConfirm": "确认立即重启该容器？",
       "holdToRestart": "长按重启",
-      "releaseToCancel": "松手取消"
+      "releaseToCancel": "松手取消",
+      "viewMonitor": "查看监控（日志/资源）"
     },
     "dockerContainerError": "容器异常",
     "dockerGetContainerListFailed": "获取容器列表失败",

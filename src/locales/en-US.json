@@ -460,7 +460,8 @@
       "restartContainer": "Restart container",
       "restartConfirm": "Restart this container now?",
       "holdToRestart": "Hold to restart",
-      "releaseToCancel": "Release to cancel"
+      "releaseToCancel": "Release to cancel",
+      "viewMonitor": "View monitor (logs/resources)"
     },
     "dockerContainerError": "Container exception",
     "dockerGetContainerListFailed": "Failed to get container list",
